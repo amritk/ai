@@ -1,0 +1,421 @@
+<title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f3f5f7;
+    --paper: #ffffff;
+    --paper-2: #eaeef2;
+    --ink: #141a21;
+    --ink-2: #4a5663;
+    --ink-3: #7b8794;
+    --line: #d6dde4;
+    --line-2: #c3ccd5;
+    --accent: #2c5282;
+    --accent-soft: #e2ebf5;
+    --focus: #2c5282;
+
+    --crit: #9b1c3a;  --crit-soft: #f8e1e7;  --crit-ink: #7a1230;
+    --major: #c2410c; --major-soft: #fbe6da; --major-ink: #9a3308;
+    --minor: #a66a00; --minor-soft: #f7ecd2; --minor-ink: #7d5000;
+    --nit: #4a5663;   --nit-soft: #e7ebef;   --nit-ink: #3b4652;
+    --ok: #1e7a4a;    --ok-soft: #dcf1e4;    --ok-ink: #145a36;
+    --blocked: #5b4bab; --blocked-soft: #e8e4f7; --blocked-ink: #46398a;
+
+    --display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+    --body: "IBM Plex Sans", "Segoe UI", Roboto, sans-serif;
+    --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --radius: 6px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0f1419; --paper: #171d24; --paper-2: #1f2730;
+      --ink: #e6ebf0; --ink-2: #aab5c0; --ink-3: #7f8b97;
+      --line: #2a343f; --line-2: #384451;
+      --accent: #8fb4e3; --accent-soft: #1d2a3b; --focus: #8fb4e3;
+      --crit: #ff7a97;  --crit-soft: #3a1622;  --crit-ink: #ffb3c3;
+      --major: #ff9a66; --major-soft: #3a2014; --major-ink: #ffc2a3;
+      --minor: #f0b84a; --minor-soft: #352a10; --minor-ink: #f7d693;
+      --nit: #aab5c0;   --nit-soft: #222a33;   --nit-ink: #c8d1da;
+      --ok: #5fcf8f;    --ok-soft: #12301f;    --ok-ink: #a3e6c1;
+      --blocked: #b0a3f0; --blocked-soft: #221d3a; --blocked-ink: #cdc4f7;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0f1419; --paper: #171d24; --paper-2: #1f2730;
+    --ink: #e6ebf0; --ink-2: #aab5c0; --ink-3: #7f8b97;
+    --line: #2a343f; --line-2: #384451;
+    --accent: #8fb4e3; --accent-soft: #1d2a3b; --focus: #8fb4e3;
+    --crit: #ff7a97;  --crit-soft: #3a1622;  --crit-ink: #ffb3c3;
+    --major: #ff9a66; --major-soft: #3a2014; --major-ink: #ffc2a3;
+    --minor: #f0b84a; --minor-soft: #352a10; --minor-ink: #f7d693;
+    --nit: #aab5c0;   --nit-soft: #222a33;   --nit-ink: #c8d1da;
+    --ok: #5fcf8f;    --ok-soft: #12301f;    --ok-ink: #a3e6c1;
+    --blocked: #b0a3f0; --blocked-soft: #221d3a; --blocked-ink: #cdc4f7;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--body); font-size: 14px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  button, input, select { font: inherit; color: inherit; }
+  code, .mono { font-family: var(--mono); font-size: 0.92em; }
+  h2 { font-family: var(--display); font-size: 20px; letter-spacing: -0.01em; margin: 32px 0 12px; }
+  h3 { font-family: var(--display); font-size: 15px; margin: 0 0 8px; }
+  .muted { color: var(--ink-3); }
+
+  .page { max-width: 1060px; margin: 0 auto; padding: 32px 16px 80px; }
+  @media (min-width: 720px) { .page { padding: 40px 24px 96px; } }
+
+  header.masthead { padding-bottom: 20px; border-bottom: 1px solid var(--line-2); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); margin: 0 0 8px;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1.1;
+    letter-spacing: -0.015em; margin: 0 0 14px; text-wrap: balance;
+  }
+  @media (min-width: 720px) { h1 { font-size: 36px; } }
+  .facts { display: flex; flex-wrap: wrap; gap: 4px 20px; color: var(--ink-2); font-size: 13px; }
+  .facts b { color: var(--ink); font-weight: 600; }
+
+  .verdict {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px;
+    margin: 24px 0 8px; padding: 16px 18px; border-radius: var(--radius);
+    border: 1px solid var(--line-2); border-left-width: 5px; background: var(--paper);
+  }
+  .verdict .label { font-family: var(--display); font-size: 20px; font-weight: 700; }
+  .verdict .note { color: var(--ink-2); flex: 1 1 320px; }
+  .verdict.crit  { border-left-color: var(--crit);  background: var(--crit-soft); }
+  .verdict.crit .label { color: var(--crit-ink); }
+  .verdict.major { border-left-color: var(--major); background: var(--major-soft); }
+  .verdict.major .label { color: var(--major-ink); }
+  .verdict.minor { border-left-color: var(--minor); background: var(--minor-soft); }
+  .verdict.minor .label { color: var(--minor-ink); }
+  .verdict.gaps  { border-left-color: var(--blocked); background: var(--blocked-soft); }
+  .verdict.gaps .label { color: var(--blocked-ink); }
+  .verdict.clean { border-left-color: var(--ok); background: var(--ok-soft); }
+  .verdict.clean .label { color: var(--ok-ink); }
+
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 20px 0 6px; }
+  @media (min-width: 620px) { .tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .tile {
+    text-align: left; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--paper); cursor: pointer; display: block;
+  }
+  .tile .n { display: block; font-family: var(--display); font-size: 24px; font-weight: 700; line-height: 1; }
+  .tile .l { display: block; font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+  .tile[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .tile.pass .n { color: var(--ok); }
+  .tile.fail .n { color: var(--crit); }
+  .tile.partial .n { color: var(--major); }
+  .tile.blocked .n { color: var(--blocked); }
+  .tile.skipped .n { color: var(--ink-3); }
+
+  .sevbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 4px; }
+  .sevbar button {
+    border: 1px solid var(--line); background: var(--paper); border-radius: 999px;
+    padding: 5px 12px; cursor: pointer; font-size: 13px;
+  }
+  .sevbar button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .sevbar .n { font-weight: 600; }
+
+  .fix-first {
+    margin: 24px 0; padding: 18px 20px; border: 1px solid var(--line-2);
+    border-radius: var(--radius); background: var(--paper);
+  }
+  .fix-first h2 { margin: 0 0 10px; font-size: 18px; }
+  .fix-first ul { margin: 0; padding: 0; list-style: none; }
+  .fix-first li { padding: 8px 0; border-top: 1px solid var(--line); }
+  .fix-first li:first-child { border-top: 0; }
+  .fix-first .sev {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    margin-left: 8px; padding: 1px 7px; border-radius: 999px; background: var(--paper-2); color: var(--ink-2);
+  }
+  .fix-first .sev-critical .sev { background: var(--crit-soft); color: var(--crit-ink); }
+  .fix-first .sev-major .sev { background: var(--major-soft); color: var(--major-ink); }
+  .fix-first .why { display: block; color: var(--ink-2); margin-top: 2px; }
+  .fix-first.none { background: var(--paper); }
+
+  .grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); padding: 14px 16px; }
+  .panel ul { margin: 0; padding-left: 18px; }
+  .panel li { margin-bottom: 4px; }
+
+  .finding {
+    border: 1px solid var(--line); border-left-width: 4px; border-radius: var(--radius);
+    background: var(--paper); padding: 16px 18px; margin-bottom: 14px;
+  }
+  .finding.critical { border-left-color: var(--crit); }
+  .finding.major { border-left-color: var(--major); }
+  .finding.minor { border-left-color: var(--minor); }
+  .finding.nit { border-left-color: var(--nit); }
+  .finding h3 { font-size: 17px; margin-bottom: 6px; }
+  .finding .id { font-family: var(--mono); color: var(--ink-3); margin-right: 6px; }
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 2px 8px; border-radius: 999px; background: var(--paper-2); color: var(--ink-2);
+    vertical-align: 2px;
+  }
+  .pill.critical { background: var(--crit-soft); color: var(--crit-ink); }
+  .pill.major { background: var(--major-soft); color: var(--major-ink); }
+  .pill.minor { background: var(--minor-soft); color: var(--minor-ink); }
+  .pill.nit { background: var(--nit-soft); color: var(--nit-ink); }
+  .pill.pass { background: var(--ok-soft); color: var(--ok-ink); }
+  .pill.fail { background: var(--crit-soft); color: var(--crit-ink); }
+  .pill.partial { background: var(--major-soft); color: var(--major-ink); }
+  .pill.blocked { background: var(--blocked-soft); color: var(--blocked-ink); }
+  .pill.skipped { background: var(--paper-2); color: var(--ink-3); }
+  .pill.flaky, .pill.pre-existing { background: var(--minor-soft); color: var(--minor-ink); }
+
+  .kv { display: grid; gap: 2px 14px; margin: 10px 0; }
+  @media (min-width: 620px) { .kv { grid-template-columns: 110px 1fr; } }
+  .kv dt { color: var(--ink-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 2px; }
+  .kv dd { margin: 0 0 6px; }
+  .finding ol { margin: 4px 0; padding-left: 20px; }
+  pre {
+    margin: 6px 0 0; padding: 10px 12px; background: var(--paper-2); border-radius: var(--radius);
+    overflow-x: auto; font-family: var(--mono); font-size: 12px; line-height: 1.45;
+  }
+  .shots { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+  .shots figure { margin: 0; max-width: 320px; }
+  .shots img {
+    display: block; width: 100%; height: auto; max-height: 260px; object-fit: contain; object-position: top;
+    border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--paper-2);
+  }
+  .shots figcaption { color: var(--ink-3); font-size: 12px; margin-top: 4px; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 14px 0; }
+  .toolbar input[type="search"] {
+    flex: 1 1 220px; padding: 7px 10px; border: 1px solid var(--line-2);
+    border-radius: var(--radius); background: var(--paper);
+  }
+  .toolbar select { padding: 7px 10px; border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--paper); }
+  .toolbar .clear { padding: 7px 12px; border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--paper); cursor: pointer; }
+  .toolbar .count { color: var(--ink-3); font-size: 13px; margin-left: auto; }
+
+  details.check { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); margin-bottom: 8px; }
+  details.check > summary {
+    cursor: pointer; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline;
+  }
+  details.check > summary::-webkit-details-marker { display: none; }
+  details.check .t { font-weight: 500; flex: 1 1 260px; }
+  details.check .id { font-family: var(--mono); color: var(--ink-3); }
+  details.check .area { font-size: 12px; color: var(--ink-3); }
+  details.check .body { padding: 0 14px 14px; border-top: 1px solid var(--line); }
+  details.check[data-status="fail"] { border-left: 3px solid var(--crit); }
+  details.check[data-status="partial"] { border-left: 3px solid var(--major); }
+  details.check[data-status="blocked"] { border-left: 3px solid var(--blocked); }
+
+  .empty { color: var(--ink-3); padding: 20px; text-align: center; border: 1px dashed var(--line-2); border-radius: var(--radius); }
+  footer.note { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12.5px; }
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <p class="eyebrow">QA pass &middot; __ENV__ &middot; __DATE__</p>
+    <h1>__HEADING__</h1>
+    <div class="facts">
+      <span>target: <a href="__TARGET_URL__"><b>__TARGET_URL__</b></a></span>
+      <span>build: <b class="mono">__BUILD__</b></span>
+      <span>driver: <b>__DRIVER__</b></span>
+      <span>browser: <b>__BROWSER__</b></span>
+      <span>viewport: <b>__VIEWPORT__</b></span>
+      <span>depth: <b>__DEPTH__</b></span>
+    </div>
+  </header>
+
+  <div class="verdict __VERDICT_CLASS__">
+    <span class="label">__VERDICT_LABEL__</span>
+    <span class="note">__VERDICT_NOTE__</span>
+  </div>
+
+  <div class="tiles" role="group" aria-label="Filter checks by status">
+    <button class="tile pass" data-status="pass" aria-pressed="false"><span class="n">__N_PASS__</span><span class="l">passed</span></button>
+    <button class="tile fail" data-status="fail" aria-pressed="false"><span class="n">__N_FAIL__</span><span class="l">failed</span></button>
+    <button class="tile partial" data-status="partial" aria-pressed="false"><span class="n">__N_PARTIAL__</span><span class="l">partial</span></button>
+    <button class="tile blocked" data-status="blocked" aria-pressed="false"><span class="n">__N_BLOCKED__</span><span class="l">blocked</span></button>
+    <button class="tile skipped" data-status="skipped" aria-pressed="false"><span class="n">__N_SKIPPED__</span><span class="l">skipped</span></button>
+  </div>
+  <p class="muted" style="margin:6px 0 0">__TOTAL__ checks, __PASS_RATE__ of the ones that ran passed &middot; __FINDINGS_TOTAL__ findings</p>
+
+__FIX_FIRST__
+
+  <h2>Findings</h2>
+  <div class="sevbar" role="group" aria-label="Filter findings by severity">
+    <button data-sev="critical" aria-pressed="false"><span class="n">__N_CRITICAL__</span> critical</button>
+    <button data-sev="major" aria-pressed="false"><span class="n">__N_MAJOR__</span> major</button>
+    <button data-sev="minor" aria-pressed="false"><span class="n">__N_MINOR__</span> minor</button>
+    <button data-sev="nit" aria-pressed="false"><span class="n">__N_NIT__</span> nit</button>
+  </div>
+  <div id="findings"></div>
+
+  <h2>Checks</h2>
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Search checks by title, area, or result" aria-label="Search checks">
+    <label>Area <select id="area"><option value="">any</option></select></label>
+    <label>Kind <select id="kind"><option value="">any</option><option value="specified">specified</option><option value="exploratory">exploratory</option></select></label>
+    <button class="clear" id="clear" type="button">Clear filters</button>
+    <span class="count" id="count"></span>
+  </div>
+  <div id="checks"></div>
+
+  <h2>Scope</h2>
+  <p>__ASKED__</p>
+  <div class="grid three">
+    <section class="panel"><h3>Asked for</h3>__IN_SCOPE__</section>
+__GAPS__
+__BASELINE__
+  </div>
+  <div class="grid" style="margin-top:14px">
+__NOTES__
+  </div>
+
+  <footer class="note">
+    Run on __DATE__ against __TARGET_URL__ at build <span class="mono">__BUILD__</span>, driven through __DRIVER__ at __DEPTH__ depth.
+    Every finding here was reproduced from a clean state before it was written down; findings marked <span class="pill flaky">flaky</span> reproduced only some of the time,
+    and ones marked <span class="pill pre-existing">pre-existing</span> also happen on the baseline build. A pass is evidence that the listed checks behaved, not that the feature has no other defects &mdash; read &ldquo;Not covered&rdquo; before treating this as a release gate.
+  </footer>
+</div>
+
+<script>
+  const DATA = __DATA__;
+  const SEV_ORDER = { critical: 0, major: 1, minor: 2, nit: 3 };
+  const STATUS_ORDER = { fail: 0, partial: 1, blocked: 2, skipped: 3, pass: 4 };
+  const state = { status: null, sev: null, q: "", area: "", kind: "" };
+
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pill = (cls, text) => `<span class="pill ${esc(cls)}">${esc(text)}</span>`;
+  const steps = (items) => `<ol>${(items || []).map((s) => `<li>${esc(s)}</li>`).join("")}</ol>`;
+  const lines = (items) => ((items || []).length ? `<pre>${(items || []).map(esc).join("\n")}</pre>` : "");
+
+  function shots(evidence) {
+    const images = (evidence || []).filter((e) => e.kind === "screenshot");
+    const texts = (evidence || []).filter((e) => e.kind !== "screenshot");
+    let html = "";
+    if (images.length) {
+      html += `<div class="shots">${images.map((e) => `
+        <figure>
+          <a href="shots/${encodeURIComponent(e.path)}" target="_blank" rel="noopener">
+            <img src="shots/${encodeURIComponent(e.path)}" alt="${esc(e.caption || e.path)}" loading="lazy">
+          </a>
+          ${e.caption ? `<figcaption>${esc(e.caption)}</figcaption>` : ""}
+        </figure>`).join("")}</div>`;
+    }
+    if (texts.length) html += lines(texts.map((e) => (e.caption ? `${e.caption}: ${e.text}` : e.text)));
+    return html;
+  }
+
+  function renderFinding(f) {
+    const checks = (f.checks || []).map((id) => `<a href="#${esc(id)}">${esc(id)}</a>`).join(", ");
+    return `
+<article class="finding ${esc(f.severity)}" id="${esc(f.id)}">
+  <h3><span class="id">${esc(f.id)}</span>${esc(f.title)} ${pill(f.severity, f.severity)} ${f.status !== "confirmed" ? pill(f.status, f.status) : ""}</h3>
+  <p>${esc(f.impact)}</p>
+  <dl class="kv">
+    <dt>Repro</dt><dd>${steps(f.repro)}</dd>
+    <dt>Expected</dt><dd>${esc(f.expected)}</dd>
+    <dt>Actual</dt><dd>${esc(f.actual)}</dd>
+    ${f.area ? `<dt>Area</dt><dd>${esc(f.area)}</dd>` : ""}
+    ${checks ? `<dt>Seen in</dt><dd>${checks}</dd>` : ""}
+    ${f.code_lead ? `<dt>Code lead</dt><dd><span class="mono">${esc(f.code_lead)}</span></dd>` : ""}
+    ${(f.console || []).length ? `<dt>Console</dt><dd>${lines(f.console)}</dd>` : ""}
+    ${(f.network || []).length ? `<dt>Network</dt><dd>${lines(f.network)}</dd>` : ""}
+  </dl>
+  ${shots(f.evidence)}
+</article>`;
+  }
+
+  function renderCheck(c) {
+    const findings = (c.findings || []).map((id) => `<a href="#${esc(id)}">${esc(id)}</a>`).join(", ");
+    return `
+<details class="check" id="${esc(c.id)}" data-status="${esc(c.status)}"${c.status === "fail" || c.status === "partial" ? " open" : ""}>
+  <summary>
+    ${pill(c.status, c.status)}
+    <span class="id">${esc(c.id)}</span>
+    <span class="t">${esc(c.title)}</span>
+    <span class="area">${esc(c.area)} &middot; ${esc(c.type)}</span>
+  </summary>
+  <div class="body">
+    <dl class="kv">
+      <dt>Steps</dt><dd>${steps(c.steps)}</dd>
+      <dt>Expected</dt><dd>${esc(c.expected)}</dd>
+      <dt>Actual</dt><dd>${esc(c.actual)}</dd>
+      ${findings ? `<dt>Findings</dt><dd>${findings}</dd>` : ""}
+    </dl>
+    ${shots(c.evidence)}
+  </div>
+</details>`;
+  }
+
+  function matchesCheck(c) {
+    if (state.status && c.status !== state.status) return false;
+    if (state.area && c.area !== state.area) return false;
+    if (state.kind && c.type !== state.kind) return false;
+    if (state.q) {
+      const hay = [c.id, c.title, c.area, c.expected, c.actual, ...(c.steps || [])].join(" ").toLowerCase();
+      if (!hay.includes(state.q)) return false;
+    }
+    return true;
+  }
+
+  function render() {
+    const findings = DATA.findings
+      .filter((f) => !state.sev || f.severity === state.sev)
+      .sort((a, b) => SEV_ORDER[a.severity] - SEV_ORDER[b.severity] || a.id.localeCompare(b.id));
+    document.getElementById("findings").innerHTML = findings.length
+      ? findings.map(renderFinding).join("")
+      : `<p class="empty">${DATA.findings.length ? "No findings at this severity." : "No findings. Read “Not covered” before reading that as “no bugs”."}</p>`;
+
+    const checks = DATA.checks
+      .filter(matchesCheck)
+      .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || a.id.localeCompare(b.id, undefined, { numeric: true }));
+    document.getElementById("count").textContent = `${checks.length} of ${DATA.checks.length}`;
+    document.getElementById("checks").innerHTML = checks.length
+      ? checks.map(renderCheck).join("")
+      : `<p class="empty">No checks match these filters.</p>`;
+  }
+
+  const areas = [...new Set(DATA.checks.map((c) => c.area).filter(Boolean))].sort();
+  document.getElementById("area").insertAdjacentHTML("beforeend", areas.map((a) => `<option>${esc(a)}</option>`).join(""));
+
+  document.querySelectorAll(".tile").forEach((b) => b.addEventListener("click", () => {
+    state.status = state.status === b.dataset.status ? null : b.dataset.status;
+    document.querySelectorAll(".tile").forEach((t) => t.setAttribute("aria-pressed", String(t.dataset.status === state.status)));
+    render();
+  }));
+  document.querySelectorAll(".sevbar button").forEach((b) => b.addEventListener("click", () => {
+    state.sev = state.sev === b.dataset.sev ? null : b.dataset.sev;
+    document.querySelectorAll(".sevbar button").forEach((t) => t.setAttribute("aria-pressed", String(t.dataset.sev === state.sev)));
+    render();
+  }));
+  document.getElementById("q").addEventListener("input", (e) => { state.q = e.target.value.trim().toLowerCase(); render(); });
+  ["area", "kind"].forEach((id) => document.getElementById(id).addEventListener("change", (e) => { state[id] = e.target.value; render(); }));
+  document.getElementById("clear").addEventListener("click", () => {
+    Object.assign(state, { status: null, sev: null, q: "", area: "", kind: "" });
+    document.getElementById("q").value = "";
+    ["area", "kind"].forEach((id) => (document.getElementById(id).value = ""));
+    document.querySelectorAll("[aria-pressed]").forEach((x) => x.setAttribute("aria-pressed", "false"));
+    render();
+  });
+
+  render();
+  function openTarget() {
+    const el = document.getElementById(location.hash.slice(1));
+    if (!el) return;
+    if (el.tagName === "DETAILS") el.open = true;
+    el.scrollIntoView({ block: "start" });
+  }
+  window.addEventListener("hashchange", openTarget);
+  openTarget();
+</script>
