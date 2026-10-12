@@ -191,6 +191,7 @@ Criteria belonging to an escalated slice are marked `escalated` without being ch
 4. `unsubscribe_pr_activity` for every PR; `delete_trigger` for the run's check-ins; archive the worker sessions, acceptance included.
 5. Close the issue only if every slice merged **and** every criterion was met. An escalation leaves it open — that is the handoff.
 6. Report to the human (see below), and `PushNotification` the one-line outcome. The run started because nobody wanted to watch it; it ends by telling them how it went.
+7. Type `The End` as the very last line of the final message. It is the unambiguous signal that the run is over and no wake will follow — so it belongs only here, after every step above has run.
 
 ---
 
@@ -215,7 +216,11 @@ Short, whatever the outcome:
   Learned: {proposed CLAUDE.md line, or "nothing recurring"}
   Ledger: {issue url}
   Report: {artifact url}
+
+The End
 ```
+
+`The End` closes the summary only when the run is complete — Phase 8 has finished. A `--status` report, a `--dry-run`, an abort, and any mid-run wake never print it, because the line means nothing is left running.
 
 ---
 
