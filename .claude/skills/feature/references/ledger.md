@@ -24,7 +24,7 @@ Title `Feature: <slug>`, label `feature-run`, body:
 - plan: `feature/{slug}/plan` → `.claude/plans/{slug}.plan.md`
 - flags: max-slices {N}, max-rounds {N}, {--no-merge if set}
 - verification: test `{cmd}` · coverage `{cmd}` · lint `{cmd}` · types `{cmd}`
-- bounds: deadline {ISO timestamp} · no-branch 45m · no-commit 90m · re-runs 1 per check per head · check-ins 15→30→60m on no drift
+- bounds: deadline {ISO timestamp} · no-branch 45m · no-commit 90m · re-runs 1 per check per head · check-ins 30→60→120m on no drift, capped at the shortest running silence timeout
 
 ## Acceptance
 | # | criterion | static | qa | state |

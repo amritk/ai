@@ -64,6 +64,8 @@ Branch: feature/{slug}/{stage-id}   (already assigned — commit and push here, 
 Goal: {goal}
 Owns (do not create or edit files outside these globs): {owns globs}
 Verification: {verification command}
+Targeted tests: {targeted test command}
+Generated files (regenerate with the repo's tooling, never edit or hand-merge): {generated globs}
 
 Todos:
 {the stage's todos, verbatim}
@@ -76,7 +78,7 @@ and is working in parallel right now.
 
 ## Definition of done
 1. The stage's todos are implemented, and nothing outside your Owns globs changed.
-2. `{test command}` passes.
+2. `{test command}` — the full suite — passes on the head you open the PR from.
 3. `{coverage command}` passes with the repo's configured thresholds. 100% coverage
    of the lines you added is the bar. If you cannot reach it, say which lines and why
    in the PR body — do NOT lower a threshold, add an ignore comment, or skip a test.
@@ -88,12 +90,28 @@ and is working in parallel right now.
 6. Then run /simplify over the same diff and apply what it returns: reuse what the
    repo already has instead of adding a parallel version of it, drop scaffolding you
    no longer need, and keep each piece at the altitude it belongs at. If that command
-   is not available, re-read your diff for the same things. Re-run `{test command}`
-   and `{coverage command}` afterwards — a cleanup that breaks a test is not a
+   is not available, re-read your diff for the same things. Then run the full suite
+   once, after both passes, not before each — a cleanup that breaks a test is not a
    cleanup. This pass never changes behaviour and never widens your Owns globs.
 7. Open a PR from your branch to {default branch}. Title: `{stage title}`.
    Body: what changed and why, the verification commands you ran with their results,
    and `Part of #{issue number}` so it links to the run.
+
+## Running tests without burning the session
+Every model call re-reads your whole context, so waiting is what costs you, not testing.
+- The full suite runs twice: before you open the PR, and when the lead says you are
+  next to merge. During review rounds run `{targeted test command}` for what the
+  round changed, plus lint and typecheck; CI runs the full suite on every push.
+- Commit before you start a long run, so a stop hook that checks for uncommitted
+  work does not wake you while it runs.
+- Start a long run once, in the background, with its output redirected to a file,
+  then end your turn: you are woken when it exits. Never poll it — no `sleep` or
+  `until` loops, no re-armed monitors, no second runner on the same output. Read the
+  result with grep or tail, not by printing the log.
+- Do not schedule check-ins for yourself. The lead's messages and PR events wake you.
+- Do not merge {default branch} into your branch whenever it moves. Merge it when the
+  PR conflicts, or when the lead tells you you are next to merge — then regenerate
+  the generated files with the repo's tooling, run the full suite once, and push.
 
 ## Rules
 - Push only to your own branch. Never push to {default branch}, never touch another
@@ -105,9 +123,12 @@ and is working in parallel right now.
 - If your stage turns out to be impossible as written, push what you have, open the
   PR as a draft, and say exactly what blocked you in the PR body. Do not substitute
   different work and do not widen your scope to fix it.
-- You will get review comments as a single batch. Address every one of them in one
-  push, then stop. Do not reply to argue; if a finding is wrong, say so in one line
-  on that thread and move on.
+- You will get review comments as a single batch. Address every blocking one in one
+  push, then stop. Non-blocking ones (wording, style, a comment) go in that same
+  push when they are cheap; never push for them alone. The PR body is not reviewed
+  round by round: keep it accurate, and do not rewrite it unless a round says it is
+  wrong. Do not reply to argue; if a finding is wrong, say so in one line on that
+  thread and move on.
 ```
 
 ## Concurrency
