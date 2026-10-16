@@ -6,7 +6,7 @@ The only thing standing between an autonomous worker and `main`. Every condition
 
 Evaluate **at the PR's current head SHA**, immediately before merging. A gate evaluated before an earlier merge, or before the worker's last push, is stale and must be re-run.
 
-1. **Review converged** — a full round with zero findings surviving verification. Not "the last round was small".
+1. **Review converged** — a full round with zero blocking findings surviving verification. Not "the last round was small". Non-blocking findings sent at convergence do not hold the gate.
 2. **`skipped` and `disputed` are empty.** Anything awaiting a human call blocks the merge by definition.
 3. **CI green on this head.** Every required check concluded `success`. Not "green on the previous commit", not "the failure looks unrelated". A required check that never ran is not green.
 4. **GitHub says mergeable.** `pull_request_read` reports `mergeable: true` and a `mergeable_state` that permits merging. Trust GitHub's answer over your own reasoning about conflicts — it knows about protection rules, required reviews, and stale branches that you do not.
@@ -26,7 +26,8 @@ All eight, or it does not merge.
 
 - Use the repo's configured merge method; prefer squash where the repo squashes. Delete the branch after merge.
 - **Never bypass.** No admin merge, no force-merge, no disabling a required check, no dismissing a review to get past protection. If protection blocks the merge, protection is right and the run escalates.
-- One at a time, in dependency order. After each merge: `update_pull_request_branch` on every still-open slice PR, let CI re-run against the new base, and re-evaluate their gates from scratch. A PR that was green ten minutes ago is not green now — it has a new base.
+- One at a time, in dependency order. After each merge, the next converged PR in order is told it is next: its worker merges the new base, regenerates generated files, runs the full suite and pushes, and its gate is re-evaluated from scratch once CI is green on that head. A PR that was green ten minutes ago is not green now — it has a new base. PRs further back are not updated after every merge; their turn brings them up to date once.
+- The lead writes the squash commit message at merge from the PR's final state, so the message meets the repo's convention without a review round spent on the PR body.
 - If updating a branch produces a conflict, that PR goes back to its worker. The lead does not resolve conflicts in code it did not write.
 
 ## Escalation
