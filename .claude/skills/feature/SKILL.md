@@ -70,7 +70,7 @@ Invoke with `/feature [requirements | plan slug] [flags]`.
 - First non-flag token: either a plan slug/path (`.claude/plans/<slug>.plan.md`) to execute, or free-text requirements to plan from. Free text means Phase 1 runs; a slug means it is skipped.
 - `--dry-run`: plan, slice, and print the fan-out table — spawn nothing, open nothing, merge nothing.
 - `--max-slices N`: concurrent cloud sessions (default **4**).
-- `--max-rounds N`: adversarial review rounds per PR (default **4**). Only blocking findings open a round (`references/review-loop.md`), so a PR that is still finding blocking problems after four is one a human should look at.
+- `--max-rounds N`: adversarial review rounds per PR (default **6**). Only blocking findings open a round (`references/review-loop.md`), so a PR that is still finding blocking problems after six is one a human should look at.
 - `--deadline <duration>`: wall-clock ceiling for the whole run (default **8h**). At the deadline the lead stops spawning, finishes the rounds already in flight, escalates whatever has not merged, and closes out. A run with no deadline does not fail, it just never admits it has.
 - `--no-merge`: run everything up to the merge gate, then stop with PRs green and report. Acceptance (Phase 7) does not run — nothing merged, so there is nothing to accept — and the report says the criteria were never checked. Use this the first few times against a new repo.
 - `--no-qa`: skip the dynamic half of acceptance (Phase 7). The static pass still runs, and the report says the feature was never exercised. Use it for a repo with no runnable surface, not to save time.

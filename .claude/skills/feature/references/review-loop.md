@@ -1,6 +1,6 @@
 # The review loop — adversarial, fresh, bounded
 
-One PR, up to `--max-rounds` rounds (default 4), no discussion. Most PRs converge in two. A round is opened only by a blocking finding (see **Blocking and non-blocking**).
+One PR, up to `--max-rounds` rounds (default 6), no discussion. Most PRs converge in two. A round is opened only by a blocking finding (see **Blocking and non-blocking**).
 
 ## What a round is
 
@@ -71,7 +71,7 @@ Deduplicate on `file:line` + root cause, not on wording — two agents describin
 
 - **Converged**: a full round where zero blocking findings survive verification. This is the only clean exit.
 - **Stalemate**: a round's confirmed findings are identical to the previous round's — the worker is not actually fixing them. Stop immediately and escalate; the remaining rounds will produce the same output.
-- **Budget exhausted**: `--max-rounds` reached with blocking findings open → **escalate, never merge**. A PR still finding blocking problems after four rounds is a PR a human should look at.
+- **Budget exhausted**: `--max-rounds` reached with blocking findings open → **escalate, never merge**. A PR still finding blocking problems after six rounds is a PR a human should look at.
 - **Worker unreachable**: findings outstanding and the slice's session is dead → respawn per `fan-out.md`, or escalate on a second failure.
 
 ## What the reviewers look for
