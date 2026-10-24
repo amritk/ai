@@ -75,6 +75,8 @@ Invoke with `/check-iterate [--max-loops N] [--dimension <name>] [focus notes]`.
 
 Run the `/check` collection fan-out exactly as defined in Phases 0–1 of the `check` skill: re-enumerate the diff against `<base>` (it changes as fixes land), shard by cohesion, and spawn one read-only `checker` subagent per shard **in a single message** with the standard adversarial spawn prompt — including the base SHA — plus any `--dimension` restriction and free-text focus. Do not background them.
 
+Always spawn, even for a single shard: `/check`'s inline single-shard path does not apply here. From loop 2 on, the diff contains fixes this agent wrote, and that is exactly the case where `/check` spawns too — the collector has to be a fresh context that never saw the fixes being written.
+
 Merge and deduplicate the reports (same `file:line` + root cause), then drop anything already in `rejected` or `skipped` from a previous loop — a finding that was refuted once does not get a second trial.
 
 **If nothing new survives the merge → consensus. Exit the loop.**

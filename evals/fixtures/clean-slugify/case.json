@@ -1,0 +1,5 @@
+{
+  "summary": "Clean: a documented, tested slugify. Any finding here is a false positive or a nit.",
+  "bugs": [],
+  "guards": ["probes/guard_slugify.py"]
+}

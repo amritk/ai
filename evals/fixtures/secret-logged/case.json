@@ -1,0 +1,12 @@
+{
+  "summary": "Failed-login logging includes the attempted password.",
+  "bugs": [
+    {
+      "id": "password-logged",
+      "dimension": "security",
+      "locations": [{"file": "auth.py", "contains": "log.warning(\"login failed for %s with password %r\", username, password)"}],
+      "probe": "probes/no_password_in_logs.py"
+    }
+  ],
+  "guards": ["probes/guard_login.py"]
+}

@@ -1,0 +1,12 @@
+{
+  "summary": "New prefix search interpolates user input into SQL.",
+  "bugs": [
+    {
+      "id": "sql-injection",
+      "dimension": "security",
+      "locations": [{"file": "users.py", "contains": "query = f\"SELECT id, name, email FROM users WHERE name LIKE"}],
+      "probe": "probes/injection.py"
+    }
+  ],
+  "guards": ["probes/guard_prefix.py"]
+}

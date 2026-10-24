@@ -1,0 +1,16 @@
+{
+  "summary": "apply_discount switches from whole percents to fractions and its test is edited to match, but checkout.py (outside the diff) still passes whole percents.",
+  "bugs": [
+    {
+      "id": "unit-change-breaks-caller",
+      "dimension": "reliability",
+      "locations": [
+        {"file": "pricing.py", "contains": "def apply_discount(price, rate):"},
+        {"file": "checkout.py", "contains": "return apply_discount(subtotal, coupon_percent)"},
+        {"file": "tests/test_pricing.py", "contains": "self.assertEqual(apply_discount(100, 0.15), 85.0)"}
+      ],
+      "probe": "probes/coupon_percent.py"
+    }
+  ],
+  "guards": ["probes/guard_no_coupon.py"]
+}

@@ -1,0 +1,12 @@
+{
+  "summary": "paginate documents 1-based pages but computes a 0-based offset, skipping the first page.",
+  "bugs": [
+    {
+      "id": "off-by-one",
+      "dimension": "reliability",
+      "locations": [{"file": "listing.py", "contains": "start = page * per_page"}],
+      "probe": "probes/first_page.py"
+    }
+  ],
+  "guards": ["probes/guard_past_end.py"]
+}

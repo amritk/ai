@@ -39,7 +39,7 @@ skills and nothing else.
 
 | Skill | What it does |
 | --- | --- |
-| `check` | Fans the branch's diff against main out to read-only `checker` subagents that try to break it, then reduces the findings to a plan. |
+| `check` | Reviews the branch's diff against main adversarially, inline when it is one shard and fanned out to read-only `checker` subagents when it is larger, then reduces the findings to a plan. |
 | `check-iterate` | Runs that as a loop — `checker` collects, `verifier` refutes, the primary agent fixes and pins each fix with a regression test — until a pass comes back clean or seven loops. |
 | `plan` | Writes plan files in the `.claude/plans/<slug>.plan.md` stages schema. |
 | `plan-execute` | Executes a plan file, runs the plan's own verification commands, drives the check loop over the result, then publishes the run through `session-report`. |
@@ -78,6 +78,18 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 | `vue-components` | Composition API structure, typed props and emits, Tailwind, accessibility. |
 | `openapi-glossary` | Consistent OpenAPI terminology. |
 
+## Evals
+
+`evals/` scores `/check` and `/check-iterate` against fixture diffs with planted
+bugs and compares any two refs, so a change to a skill or agent ships because it
+measured no worse, not because it read better:
+
+```
+python3 evals/run.py --skill check --ref main --ref WORKTREE
+```
+
+See [`evals/README.md`](evals/README.md) for what it grades and how to add a case.
+
 ## Where these came from
 
 Most of the workflow and convention skills were collected from other repos;
@@ -108,6 +120,8 @@ never seen it.
 3. Strip repo-specific paths, package names, and commands, or state the
    condition under which they apply.
 4. `python3 scripts/validate.py`.
+5. If it changes how `check`, `check-iterate`, or their agents behave, run the
+   eval (`evals/`) against `main` before merging.
 
 The validator checks each skill's frontmatter `name` matches its directory, that
 it has a description within Claude Code's listing limit, that every
@@ -116,7 +130,9 @@ it has a description within Claude Code's listing limit, that every
 `Agent` (there is no `Task` alias, so a `Task` entry pre-approves nothing), that
 every `subagent_type` a skill spawns has an agent file, and that no bundled file
 sits there unreferenced. Agents get the same treatment against the fields the
-sub-agent docs define (`model`, `effort`, `color`).
+sub-agent docs define (`model`, `effort`, `color`), and every agent that rates
+findings `high | medium | low` must carry the same severity rubric word for word —
+an agent file cannot point at a shared reference, so the copies are compared instead.
 
 ## Adding an agent
 
@@ -127,3 +143,5 @@ sub-agent docs define (`model`, `effort`, `color`).
 3. Define its output format in the file, so the skill that spawns it can parse
    the result without restating the schema in every prompt.
 4. `python3 scripts/validate.py`.
+5. If it changes how `check`, `check-iterate`, or their agents behave, run the
+   eval (`evals/`) against `main` before merging.
