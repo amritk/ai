@@ -223,8 +223,13 @@ def hits(cites: list[tuple[str, int, int]], loc: dict) -> bool:
 
 
 def read_transcript(path: pathlib.Path) -> tuple[dict, int]:
-    """The final result event, and how many subagents the top-level loop spawned."""
-    result, spawns = {}, 0
+    """The run's result, and how many subagents the top-level loop spawned.
+
+    A run whose subagents went to the background resumes when each one lands,
+    and every resumed turn ends in its own result event. Cost is cumulative
+    across them, but duration and turns are per event, so those are summed.
+    """
+    result, spawns, duration_ms, turns = {}, 0, 0, 0
     for raw in path.read_text().splitlines():
         try:
             event = json.loads(raw)
@@ -232,10 +237,14 @@ def read_transcript(path: pathlib.Path) -> tuple[dict, int]:
             continue
         if event.get("type") == "result":
             result = event
+            duration_ms += event.get("duration_ms") or 0
+            turns += event.get("num_turns") or 0
         elif event.get("type") == "assistant" and not event.get("parent_tool_use_id"):
             for block in event.get("message", {}).get("content", []):
                 if block.get("type") == "tool_use" and block.get("name") in ("Agent", "Task"):
                     spawns += 1
+    if result:
+        result = {**result, "duration_ms": duration_ms, "num_turns": turns}
     return result, spawns
 
 
@@ -349,19 +358,27 @@ def summarize(records: list[dict], cases: list[dict], refs: list[str], skill: st
 
 
 def regrade(out: pathlib.Path) -> int:
-    """Re-score saved /check runs, so a grader fix does not cost a re-run."""
+    """Re-score saved runs from their transcripts and plans, so a grader fix costs no re-run.
+
+    /check-iterate's fix verdicts come from probing a repo that no longer
+    exists, so for it only the transcript metrics are recomputed.
+    """
     records = json.loads((out / "results.json").read_text())
-    if any("fixed" in r for r in records):
-        raise SystemExit("--regrade covers /check runs; /check-iterate is graded on the repo, which is gone")
+    skill = "check-iterate" if any("fixed" in r for r in records) else "check"
     cases = {name: load_case(name) for name in sorted({r["case"] for r in records})}
     for r in records:
         run_dir = out / "runs" / f"{r['case']}--{re.sub(r'[^A-Za-z0-9._-]', '_', r['ref'])}--{r['rep']}"
-        r.update(grade_check(cases[r["case"]], run_dir))
+        result, spawns = read_transcript(run_dir / "transcript.jsonl")
+        r.update(cost_usd=result.get("total_cost_usd"), duration_s=(result.get("duration_ms") or 0) / 1000,
+                 turns=result.get("num_turns"), subagents=spawns,
+                 denials=len(result.get("permission_denials") or []))
+        if skill == "check":
+            r.update(grade_check(cases[r["case"]], run_dir))
         (run_dir / "record.json").write_text(json.dumps(r, indent=2))
     (out / "results.json").write_text(json.dumps(records, indent=2))
     refs = list(dict.fromkeys(r["ref"] for r in records))
     reps = max(r["rep"] for r in records)
-    summary = summarize(records, list(cases.values()), refs, "check", reps)
+    summary = summarize(records, list(cases.values()), refs, skill, reps)
     (out / "summary.md").write_text(summary)
     print(summary)
     return 0
@@ -382,7 +399,7 @@ def main() -> int:
     parser.add_argument("--keep-repos", action="store_true", help="keep each run's fixture repo for inspection")
     parser.add_argument("--self-test", action="store_true", help="check the fixtures themselves; no model calls")
     parser.add_argument("--regrade", type=pathlib.Path, metavar="RESULTS_DIR",
-                        help="re-grade a finished /check run's saved plans with the current grader; no model calls")
+                        help="re-grade a finished run from its saved transcripts and plans; no model calls")
     args = parser.parse_args()
     if args.regrade:
         return regrade(args.regrade)

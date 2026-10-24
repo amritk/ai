@@ -97,3 +97,11 @@ Recall held on every case. The clean-case gap is precision, not a lazier
 pass: both versions raised the same real edge cases, and the inline one ran the
 tests and probed inputs too, but did not turn speculative inputs (`None`
 titles, wish-list tests) into todos. Re-run before moving the line again.
+
+## Baselines
+
+**`/check-iterate`** (`--max-loops 3`, 11 cases × 2 reps): 17/18 planted bugs
+fixed, no guard broken, no suite left red, about 4 subagents, $0.29 and 63 s a
+run. The miss is `test-edited-to-match`. In one of two runs it "fixed" the
+broken caller by changing `cart_total` to take a fraction. That moves the
+break out to every external caller instead of fixing it, so the probe fails it.
