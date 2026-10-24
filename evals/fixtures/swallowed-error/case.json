@@ -1,0 +1,12 @@
+{
+  "summary": "Refactor replaces the narrow FileNotFoundError catch with a bare except, so malformed JSON silently resets to defaults, contradicting the docstring.",
+  "bugs": [
+    {
+      "id": "swallowed-decode-error",
+      "dimension": "reliability",
+      "locations": [{"file": "settings.py", "contains": "except Exception:"}],
+      "probe": "probes/malformed_raises.py"
+    }
+  ],
+  "guards": ["probes/guard_behaviour.py"]
+}

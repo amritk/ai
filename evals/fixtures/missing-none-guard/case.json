@@ -1,0 +1,12 @@
+{
+  "summary": "display_name dereferences a profile that load_profile documents can be None.",
+  "bugs": [
+    {
+      "id": "none-dereference",
+      "dimension": "reliability",
+      "locations": [{"file": "display.py", "contains": "nickname = profile.get(\"nickname\")"}],
+      "probe": "probes/no_profile.py"
+    }
+  ],
+  "guards": ["probes/guard_nickname.py"]
+}

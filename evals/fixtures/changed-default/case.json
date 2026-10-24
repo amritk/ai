@@ -1,0 +1,15 @@
+{
+  "summary": "parse_duration's bare-number default changes from seconds to milliseconds; config.py, outside the diff, still relies on seconds.",
+  "bugs": [
+    {
+      "id": "caller-not-adapted",
+      "dimension": "reliability",
+      "locations": [
+        {"file": "durations.py", "contains": "def parse_duration(text, default_unit=\"ms\"):"},
+        {"file": "config.py", "contains": "return parse_duration(os.environ.get(\"REQUEST_TIMEOUT\", \"30\"))"}
+      ],
+      "probe": "probes/timeout_default.py"
+    }
+  ],
+  "guards": ["probes/guard_backoff.py"]
+}

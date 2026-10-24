@@ -1,0 +1,12 @@
+{
+  "summary": "with_tag uses a mutable default list, so tags leak between calls.",
+  "bugs": [
+    {
+      "id": "mutable-default",
+      "dimension": "reliability",
+      "locations": [{"file": "tags.py", "contains": "def with_tag(tag, tags=[]):"}],
+      "probe": "probes/independent_calls.py"
+    }
+  ],
+  "guards": ["probes/guard_appends.py"]
+}

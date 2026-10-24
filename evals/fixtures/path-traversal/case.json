@@ -1,0 +1,12 @@
+{
+  "summary": "New read_upload joins a caller-supplied filename onto the upload dir without the basename guard save_upload uses.",
+  "bugs": [
+    {
+      "id": "path-traversal",
+      "dimension": "security",
+      "locations": [{"file": "storage.py", "contains": "path = os.path.join(base_dir, filename)"}],
+      "probe": "probes/traversal.py"
+    }
+  ],
+  "guards": ["probes/guard_round_trip.py"]
+}

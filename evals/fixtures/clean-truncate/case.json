@@ -1,0 +1,5 @@
+{
+  "summary": "Clean: a guarded, tested truncate_words helper. Any finding here is a false positive or a nit.",
+  "bugs": [],
+  "guards": ["probes/guard_truncate_words.py"]
+}

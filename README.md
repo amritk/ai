@@ -78,6 +78,18 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 | `vue-components` | Composition API structure, typed props and emits, Tailwind, accessibility. |
 | `openapi-glossary` | Consistent OpenAPI terminology. |
 
+## Evals
+
+`evals/` scores `/check` and `/check-iterate` against fixture diffs with planted
+bugs and compares any two refs, so a change to a skill or agent ships because it
+measured no worse, not because it read better:
+
+```
+python3 evals/run.py --skill check --ref main --ref WORKTREE
+```
+
+See [`evals/README.md`](evals/README.md) for what it grades and how to add a case.
+
 ## Where these came from
 
 Most of the workflow and convention skills were collected from other repos;
@@ -108,6 +120,8 @@ never seen it.
 3. Strip repo-specific paths, package names, and commands, or state the
    condition under which they apply.
 4. `python3 scripts/validate.py`.
+5. If it changes how `check`, `check-iterate`, or their agents behave, run the
+   eval (`evals/`) against `main` before merging.
 
 The validator checks each skill's frontmatter `name` matches its directory, that
 it has a description within Claude Code's listing limit, that every
@@ -129,3 +143,5 @@ an agent file cannot point at a shared reference, so the copies are compared ins
 3. Define its output format in the file, so the skill that spawns it can parse
    the result without restating the schema in every prompt.
 4. `python3 scripts/validate.py`.
+5. If it changes how `check`, `check-iterate`, or their agents behave, run the
+   eval (`evals/`) against `main` before merging.
