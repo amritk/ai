@@ -39,7 +39,7 @@ skills and nothing else.
 
 | Skill | What it does |
 | --- | --- |
-| `check` | Fans the branch's diff against main out to read-only `checker` subagents that try to break it, then reduces the findings to a plan. |
+| `check` | Reviews the branch's diff against main adversarially, inline when it is one shard and fanned out to read-only `checker` subagents when it is larger, then reduces the findings to a plan. |
 | `check-iterate` | Runs that as a loop — `checker` collects, `verifier` refutes, the primary agent fixes and pins each fix with a regression test — until a pass comes back clean or seven loops. |
 | `plan` | Writes plan files in the `.claude/plans/<slug>.plan.md` stages schema. |
 | `plan-execute` | Executes a plan file, runs the plan's own verification commands, drives the check loop over the result, then publishes the run through `session-report`. |

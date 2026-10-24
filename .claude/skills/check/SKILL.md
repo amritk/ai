@@ -3,9 +3,10 @@ name: check
 description: Adversarially review the branch's diff against main — the change set a
   PR would show — for security, reliability, and consistency, then produce a reduced,
   actionable plan. Enumerates the diff against the merge-base with main (uncommitted
-  edits included), fans it out across read-only `checker` subagents that try to break
-  the change and collect evidence-backed findings, and synthesizes those into a plan
-  of just the items worth acting on. Use when asked to "check the branch", "review
+  edits included), reviews a small diff inline or fans a larger one out across
+  read-only `checker` subagents that try to break the change and collect
+  evidence-backed findings, and synthesizes those into a plan of just the items worth
+  acting on. Use when asked to "check the branch", "review
   the diff against main", "run /check", or before opening or updating a PR.
 argument-hint: "[--auto] [--dimension security|reliability|consistency] [extra focus notes]"
 allowed-tools:
@@ -27,7 +28,7 @@ allowed-tools:
 
 # check
 
-Adversarial review of the branch's **diff against main** — the change set a PR from this branch would show — across three dimensions: **security**, **reliability**, **consistency** — ending in a short, actionable plan. Data collection fans out to read-only `checker` subagents (the `checker` agent); this skill scopes the diff, spawns the collectors, and synthesizes their findings.
+Adversarial review of the branch's **diff against main** — the change set a PR from this branch would show — across three dimensions: **security**, **reliability**, **consistency** — ending in a short, actionable plan. Data collection follows the `checker` agent's instructions — in the main loop for a diff small enough to be one shard, fanned out to read-only `checker` subagents for anything larger; this skill scopes the diff, collects, and synthesizes the findings.
 
 **The mandate is adversarial, not descriptive.** Assume the change is broken until the code proves otherwise. Hunt for the input that breaks it, the case the author missed, the invariant the diff quietly violates. A clean report must be *earned* — "looks fine" is not a finding, it is an unfinished search.
 
@@ -54,15 +55,17 @@ Parse `$ARGUMENTS`: `--auto`, any `--dimension` values (default all three), trai
 
 ---
 
-## Phase 1: Fan out to `checker` collectors
-
-Split the changed files into shards and spawn one `checker` subagent per shard with the `Agent` tool, **all in a single message** so they run concurrently. Each is read-only, scoped to the branch diff, and returns evidence-backed findings — no fixes, no plan.
+## Phase 1: Collect — inline for one shard, `checker` fan-out for several
 
 **Sharding** — by cohesion, not raw count:
 
-- ≤ 6 files or one tightly-coupled change → a single `checker` over the whole diff.
+- ≤ 6 files or one tightly-coupled change → one shard over the whole diff.
 - Otherwise, keep coupled files together (a service and its tests, a route and its schema, a Vue component and its composable). Aim for 3–6 files per shard, ~6 shards max; a 500+ line file can be its own shard.
 - A shard may read files outside its set for context, but do not add unrelated files without reason.
+
+**One shard → review it yourself.** Read `<skill dir>/../../agents/checker.md` and follow it as your own instructions for this pass — its stance, grounding, checklist, severity rubric, and "Not findings" list — then take your report into Phase 2. A lone `checker` buys no parallelism: it reads the files you then re-read to spot-check its evidence, and only its summary makes it back to you. Spawn one `checker` as below instead when **this session wrote the diff** (a reviewer that wrote the code reviews what it meant, not what it did), or when that file is not there.
+
+**Several shards → fan out.** Spawn one `checker` subagent per shard with the `Agent` tool, **all in a single message** so they run concurrently. Each is read-only, scoped to the branch diff, and returns evidence-backed findings — no fixes, no plan.
 
 **Spawn** with `subagent_type: "checker"`, `description: "check shard <n>: <short summary>"`:
 
@@ -91,7 +94,7 @@ Do **not** background these (`run_in_background: false`); you need each report b
 Merge every report, then reduce:
 
 1. **Deduplicate** findings sharing a `file:line` and root cause, even across shards.
-2. **Spot-check the evidence.** Open the cited line for every high-severity finding and for any finding whose quoted code you cannot place in the diff; drop the ones where the quote does not match the file. `/check` has no verification pass (that is `/check-iterate`), so this is the only filter between a collector's claim and a todo.
+2. **Spot-check the evidence.** Open the cited line for every high-severity finding and for any finding whose quoted code you cannot place in the diff; drop the ones where the quote does not match the file. `/check` has no verification pass (that is `/check-iterate`), so this is the only filter between a collector's claim and a todo. After an inline review the evidence is already your own reading; re-check only a finding you are unsure of.
 3. **Drop the non-actionable** — informational observations with no change to make. Keep genuine **nitpicks** (naming, small drift).
 4. **Rank**: security → reliability → consistency, higher severity first within each.
 5. **Resolve ambiguity.**
@@ -130,6 +133,7 @@ Wrote .claude/plans/{slug}.plan.md
 ## Design notes
 
 - **`checker` is the data layer; this skill is synthesis.** Collection stays read-only and parallel; the one judgment call — what is worth doing — stays with the orchestrator that saw every shard.
+- **A subagent has to buy something.** Fan-out buys parallel fresh contexts; a fresh context buys independence from whoever wrote the code. A single shard of someone else's diff gets neither, so it is reviewed in the main loop with the same instructions. `evals/` in this repo measures that trade: re-run it before moving the line.
 - **Adversarial by design.** Neutral "describe the diff" review misses the bug that only shows on the input nobody tried. The stance is baked into both the spawn prompt and the `checker` agent.
 - **Branch-scoped** keeps `/check` a pre-PR gate: it reviews exactly the change set the PR will show, committed or not, instead of whatever happens to be staged.
 - **Output is a normal `.claude/plans/*.plan.md`**, so a `/check` result is executed and status-tracked like any other plan.
