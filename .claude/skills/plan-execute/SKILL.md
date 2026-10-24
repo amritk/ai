@@ -69,7 +69,7 @@ Before staging, run every command the plan's `## Verification` section lists (sc
 
 ## Phase 2: Stage
 
-1. Format the touched files with whatever the repo uses, scoped to those paths — for example `pnpm biome check --write <paths>` (plus `pnpm prettier --write <paths>` for Markdown and YAML) in the pnpm repos, `bun run format` in the Bun repos. Read the root `package.json` scripts if unsure; never hand-format.
+1. Format the touched files exactly as Step 4.1 of the `check-iterate` skill does: scoped to those paths, with the repo's own formatter, never by hand.
 2. `git add` the files the plan execution created or changed — including the updated plan file — and nothing else.
 3. If nothing changed (the plan was already done), skip the loop and say so.
 

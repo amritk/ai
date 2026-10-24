@@ -116,7 +116,9 @@ it has a description within Claude Code's listing limit, that every
 `Agent` (there is no `Task` alias, so a `Task` entry pre-approves nothing), that
 every `subagent_type` a skill spawns has an agent file, and that no bundled file
 sits there unreferenced. Agents get the same treatment against the fields the
-sub-agent docs define (`model`, `effort`, `color`).
+sub-agent docs define (`model`, `effort`, `color`), and every agent that rates
+findings `high | medium | low` must carry the same severity rubric word for word —
+an agent file cannot point at a shared reference, so the copies are compared instead.
 
 ## Adding an agent
 

@@ -99,6 +99,19 @@ def check_links(path: pathlib.Path) -> None:
             errors.append(f"{path.relative_to(ROOT)}: link to missing '{target}'")
 
 
+def severity_rubric(path: pathlib.Path) -> list[str]:
+    """The `- **high** — …` / medium / low lines an agent rates findings by.
+
+    Agent files cannot point at a shared reference -- the file is the whole
+    system prompt, and a relative path means nothing once this repo is linked
+    into another -- so the rubric is copied into each one and compared here.
+    """
+    return [
+        line for line in path.read_text().splitlines()
+        if re.match(r"^- \*\*(high|medium|low)\*\* —", line)
+    ]
+
+
 def check_spawns(path: pathlib.Path, agent_names: set[str]) -> None:
     text = path.read_text()
     for name in sorted(set(SPAWN_RE.findall(text))):
@@ -175,6 +188,24 @@ for agent in agent_files:
             errors.append(f"{rel}: tools lists 'Task'; the subagent tool is 'Agent'")
     check_links(agent)
     check_spawns(agent, agent_names)
+
+# Findings flow collector -> verifier, and the verifier settles severity on the
+# collector's scale; two copies of that scale that disagree make it re-rate
+# instead of check. Every agent that emits `severity: high | medium | low` must
+# carry the rubric, word for word.
+rated = {
+    agent.relative_to(ROOT): severity_rubric(agent)
+    for agent in agent_files
+    if "severity: high | medium | low" in agent.read_text()
+}
+for rel, rubric in rated.items():
+    if len(rubric) != 3:
+        errors.append(f"{rel}: emits severity high | medium | low but does not define all three in a rubric")
+reference = next(iter(rated.items()), None)
+if reference:
+    for rel, rubric in rated.items():
+        if len(rubric) == 3 and len(reference[1]) == 3 and rubric != reference[1]:
+            errors.append(f"{rel}: severity rubric differs from {reference[0]}; keep the copies identical")
 
 for problem in errors:
     print(f"error: {problem}", file=sys.stderr)

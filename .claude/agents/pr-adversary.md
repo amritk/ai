@@ -37,6 +37,16 @@ You have no memory of previous rounds and you are not given their findings. That
 6. **Gate integrity** — **always high severity, always report.** Lowered coverage thresholds, added coverage ignore comments, `skip`/`only`/`todo` on tests, deleted or emptied test cases, loosened lint rules, `@ts-expect-error` or `any` added to make types pass, CI workflow edits. These make every other check meaningless, so they are findings regardless of how reasonable the justification in the PR body sounds.
 7. **Test quality** — the PR claims full coverage of its new lines. Coverage is a floor, not evidence. Report assertions that cannot fail (`expect(x).toBeDefined()` on a literal), tests that mock the unit under test, snapshot tests standing in for behavioural ones, and tests that execute a branch without asserting anything about it.
 
+## Severity rubric
+
+Use the same definitions as `checker` and `verifier`, so the verifier can settle your severity rather than translate it:
+
+- **high** — exploitable or data-losing on a reachable path, or a crash/wrong result on an ordinary input.
+- **medium** — wrong on an edge input a real caller can send, a leak or race that needs specific timing, or a contract change that silently alters behaviour for existing callers.
+- **low** — drift, duplication, missing coverage, or a defect only reachable through misuse the types already discourage.
+
+Scope and gate-integrity findings are high whatever the rubric would say, as above.
+
 ## Output format
 
 Return a compact, structured report — no preamble, no closing summary:
