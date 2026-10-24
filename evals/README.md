@@ -8,6 +8,7 @@ because it read better.
 python3 evals/run.py --self-test                                   # fixtures only, no model calls
 python3 evals/run.py --skill check --ref main --ref WORKTREE        # A/B this checkout against main
 python3 evals/run.py --skill check-iterate --cases off-by-one,clean-slugify --reps 1
+python3 evals/run.py --regrade evals/results/check-<timestamp>   # re-score saved /check runs after a grader fix
 ```
 
 `--ref` takes any git ref, or `WORKTREE` for the `.claude/` in this checkout,
@@ -22,11 +23,14 @@ file, and the graded record.
    skills are on `main`, so they never show in the diff being reviewed.
 2. `claude -p "/check --auto"` (or `/check-iterate --max-loops 3`) in that repo,
    with `--setting-sources project` and this session's linked directories
-   scrubbed from the environment, so the child sees only the ref's skills. Bash
-   is allowed: the skills chain git commands that a prefix rule does not match,
-   and each run has a throwaway repo to act in.
+   scrubbed from the environment, so the child sees only the ref's skills.
+   Permissions are `dontAsk` with Bash allowed: the skills chain git commands
+   that a prefix rule does not match, and each run has a throwaway repo to act
+   in. Writes into `.claude/` stay denied in that mode, so a run that tries to
+   write its plan with the Write tool is graded from its reply and marked ⚠.
 3. Grading:
-   - **`/check`**: every finding bullet in the plan body is matched against the
+   - **`/check`**: every finding bullet in the plan body (or in the final reply,
+     when there is no plan) is matched against the
      planted bugs by file and line (±3). A bug is *found* when any finding hits
      it. *Unmatched* counts findings that hit no planted bug. It undercounts,
      because line proximity is all it checks. On the clean cases, every finding
@@ -77,3 +81,19 @@ signature and the caller that did not adapt.
 
 Keep fixtures small and do not leave comments that point at the bug: a case
 the reviewer can solve by grepping for a hint measures nothing.
+
+## Decisions it has made
+
+**`/check` reviews a single shard inline** (instead of spawning one `checker`),
+measured against the fan-out version: 11 cases × 2 reps, main loop on the
+default model, checker on Sonnet.
+
+| | bugs found | findings / clean case | subagents | cost / run | time / run |
+| --- | --- | --- | --- | --- | --- |
+| one `checker` | 18/18 | 2.5 | 1 | $0.14 | 29 s |
+| inline | 18/18 | 0.5 | 0 | $0.12 | 18 s |
+
+Recall held on every case. The clean-case gap is precision, not a lazier
+pass: both versions raised the same real edge cases, and the inline one ran the
+tests and probed inputs too, but did not turn speculative inputs (`None`
+titles, wish-list tests) into todos. Re-run before moving the line again.

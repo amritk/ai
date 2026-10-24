@@ -39,7 +39,11 @@ WORKTREE = "WORKTREE"
 # this many lines of the bug's line: reviewers cite the start of a function or
 # the line after as often as the exact line.
 LINE_SLACK = 3
-CITATION_RE = re.compile(r"([A-Za-z0-9_./-]+\.py):(\d+)(?:\s*[-–]\s*(\d+))?")
+CITATION_RE = re.compile(r"([A-Za-z0-9_./-]+\.py):(\d+)(?:\s*[-–]\s*(\d+))?((?:,\s*\d+)*)")
+# Plans cite as `[users.py](users.py):12` or as `[`users.py:12`](../../users.py)`:
+# the line sits after the link in one and inside its text in the other, so a
+# link is rewritten to `text target` and both forms parse like a bare citation.
+LINK_RE = re.compile(r"\[([^\]]*)\]\(([^)\s]+)\)")
 # The child sees only the fixture repo's own `.claude/`: these would otherwise
 # leak this session's linked directories, and with them a second copy of every
 # skill under test.
@@ -51,6 +55,9 @@ SCRUBBED_ENV = (
 # Plain `Bash`, not `Bash(git:*)`: the skills chain git commands with `||` and
 # `$(...)`, which a prefix rule does not match, and a denied command makes the
 # skill stop with nothing reviewed. Each run gets a throwaway repo to act in.
+# Writes into `.claude/` stay denied in this mode whatever the allow rules say,
+# so a /check that writes its plan with Write rather than Bash is graded from
+# its reply instead (see grade_check).
 ALLOWED_TOOLS = ["Read", "Grep", "Glob", "Agent", "Write", "Edit", "Skill", "Bash"]
 PROMPTS = {
     # --auto: there is nobody to answer AskUserQuestion in a headless run.
@@ -173,11 +180,35 @@ def parse_findings(plan_text: str) -> list[list[tuple[str, int, int]]]:
             continue
         if section.startswith("notes") or not line.lstrip().startswith("- "):
             continue
-        cites = [(m.group(1).lstrip("./"), int(m.group(2)), int(m.group(3) or m.group(2)))
-                 for m in CITATION_RE.finditer(line)]
+        cites = []
+        for m in CITATION_RE.finditer(LINK_RE.sub(r"\1 \2", line)):
+            path = re.sub(r"^(\.\.?/)+", "", m.group(1))
+            cites.append((path, int(m.group(2)), int(m.group(3) or m.group(2))))
+            # `durations.py:6,12` cites two lines.
+            cites += [(path, int(n), int(n)) for n in re.findall(r"\d+", m.group(4))]
         if cites:
             findings.append(cites)
     return findings
+
+
+def grade_check(case: dict, run_dir: pathlib.Path) -> dict:
+    """Grade a /check run from the plan it wrote, or from its final reply when it wrote none.
+
+    A clean review writes no plan by design and says so in its reply; a run
+    whose plan write was denied still reported its findings there. Scoring
+    either as zero would be wrong, so both are graded from the reply, and the
+    denial still marks the run in the summary.
+    """
+    plan_text = (run_dir / "plan.md").read_text()
+    source = "plan"
+    if not plan_text.strip():
+        plan_text, source = (run_dir / "result.txt").read_text(), "reply"
+    findings = parse_findings(plan_text)
+    found = [bug["id"] for bug in case["bugs"]
+             if any(hits(f, loc) for f in findings for loc in bug["locations"])]
+    unmatched = [f for f in findings
+                 if not any(hits(f, loc) for bug in case["bugs"] for loc in bug["locations"])]
+    return {"findings": len(findings), "found": found, "unmatched": len(unmatched), "graded_from": source}
 
 
 def hits(cites: list[tuple[str, int, int]], loc: dict) -> bool:
@@ -247,14 +278,8 @@ def run_one(case: dict, ref: str, rep: int, args, claude_dirs: dict, out: pathli
     }
     if args.skill == "check":
         plans = sorted((repo / ".claude" / "plans").glob("*.plan.md"))
-        plan_text = "\n".join(p.read_text() for p in plans)
-        (run_dir / "plan.md").write_text(plan_text)
-        findings = parse_findings(plan_text)
-        found = [bug["id"] for bug in case["bugs"]
-                 if any(hits(f, loc) for f in findings for loc in bug["locations"])]
-        unmatched = [f for f in findings
-                     if not any(hits(f, loc) for bug in case["bugs"] for loc in bug["locations"])]
-        record.update(findings=len(findings), found=found, unmatched=len(unmatched))
+        (run_dir / "plan.md").write_text("\n".join(p.read_text() for p in plans))
+        record.update(grade_check(case, run_dir))
     else:
         record.update(
             fixed=[bug["id"] for bug in case["bugs"] if run_probe(case, bug["probe"], repo)],
@@ -323,6 +348,25 @@ def summarize(records: list[dict], cases: list[dict], refs: list[str], skill: st
     return "\n".join(lines) + "\n"
 
 
+def regrade(out: pathlib.Path) -> int:
+    """Re-score saved /check runs, so a grader fix does not cost a re-run."""
+    records = json.loads((out / "results.json").read_text())
+    if any("fixed" in r for r in records):
+        raise SystemExit("--regrade covers /check runs; /check-iterate is graded on the repo, which is gone")
+    cases = {name: load_case(name) for name in sorted({r["case"] for r in records})}
+    for r in records:
+        run_dir = out / "runs" / f"{r['case']}--{re.sub(r'[^A-Za-z0-9._-]', '_', r['ref'])}--{r['rep']}"
+        r.update(grade_check(cases[r["case"]], run_dir))
+        (run_dir / "record.json").write_text(json.dumps(r, indent=2))
+    (out / "results.json").write_text(json.dumps(records, indent=2))
+    refs = list(dict.fromkeys(r["ref"] for r in records))
+    reps = max(r["rep"] for r in records)
+    summary = summarize(records, list(cases.values()), refs, "check", reps)
+    (out / "summary.md").write_text(summary)
+    print(summary)
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--skill", choices=sorted(PROMPTS), default="check")
@@ -337,7 +381,11 @@ def main() -> int:
     parser.add_argument("--out", type=pathlib.Path, help="results directory (default evals/results/<timestamp>)")
     parser.add_argument("--keep-repos", action="store_true", help="keep each run's fixture repo for inspection")
     parser.add_argument("--self-test", action="store_true", help="check the fixtures themselves; no model calls")
+    parser.add_argument("--regrade", type=pathlib.Path, metavar="RESULTS_DIR",
+                        help="re-grade a finished /check run's saved plans with the current grader; no model calls")
     args = parser.parse_args()
+    if args.regrade:
+        return regrade(args.regrade)
 
     names = args.cases.split(",") if args.cases else sorted(p.name for p in FIXTURES.iterdir() if p.is_dir())
     cases = [load_case(name) for name in names]
