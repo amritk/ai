@@ -77,6 +77,7 @@ Every action the lead takes is guarded by a check that it has not already happen
 | start a review round | PR not converged, no round already logged for that PR head SHA, and the head is not conflicted (CI state does not matter) |
 | send a review batch | round number not already logged for that PR head SHA |
 | merge | PR still open, and gate re-evaluated at the current head |
+| tell a worker to update from the default branch | the PR's turn to merge, one of the update rules in `merge-gate.md` holds, and no update already logged for that base SHA |
 | re-arm a wake | no pending trigger for this run (`list_triggers`) |
 | re-run a red check | no re-run already logged for that check at that head SHA |
 | spawn acceptance | every slice merged or escalated, and no acceptance row already `running` |
