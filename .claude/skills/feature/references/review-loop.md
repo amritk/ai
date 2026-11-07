@@ -6,7 +6,9 @@ One PR, up to `--max-rounds` rounds (default 6), no discussion. Most PRs converg
 
 A round is: **collect → verify → batch → wait**. It happens entirely at one PR head SHA.
 
-**0. Only on a reviewable head.** Start a round only when the PR's current head is green and not conflicted. A red or conflicted head goes back to the worker first (SKILL Phase 4.3), and its next push changes the code anyway. A round spent on it is spent twice.
+**0. Start on the head, not on CI.** Start a round as soon as a head appears with no round logged for its SHA: when the PR opens, and again when the worker pushes for a batch. Do not wait for CI. Once a PR has converged, a new head does not open a round. That covers a base merge before the PR's turn to merge, and the one push that applies non-blocking findings. The merge gate re-checks those heads. A round and a CI run take about the same wall-clock time, so waiting for green before reviewing makes every cycle twice as long and saves nothing. The worker has to push for a red check anyway, and the round's findings go in that same push. The one head not to review is a conflicted one. It goes back to the worker first (SKILL Phase 4.3), and resolving the conflict changes the code, so a round on it is spent twice.
+
+A red check that comes in while a round on that head is still running waits for the round. The job logs go to the worker in the round's batch message (step 3), so the worker makes one push for both, not one push for the check and another for the findings. Hold it for no longer than that round.
 
 **1. Collect.** Spawn `subagent_type: "pr-adversary"` agents, all in a single message so they run concurrently. Use one agent for a diff under ~400 changed lines. Above that, use one per shard of roughly that size, split along file boundaries. More shards on a small diff add cost without adding coverage, and each extra collector also feeds more findings to the verifier. Each gets the PR number, the head SHA, the stage's `Owns` globs, the stage's todos, the round number, the generated-file globs, and **the path of a diff file the lead wrote once for this head**:
 
@@ -41,7 +43,9 @@ non-blocking. Nothing else. No fixes, no plan.
 
 This pass is what makes autonomous merge defensible. Without it the worker spends its rounds chasing plausible-sounding findings that no one checked, and the round budget burns on noise.
 
-**3. Batch.** If no confirmed finding is blocking, there is no round to send: the PR has converged, and the non-blocking findings go to the worker once, as below. Otherwise post the confirmed findings, blocking and non-blocking together, as **one** review — a single COMMENT review with line-anchored comments, submitted once. Then send the worker one message pointing at it. That is the entire communication for the round.
+**3. Batch.** If no confirmed finding is blocking, there is no round to send: the PR has converged, and the non-blocking findings go to the worker once, as below. Otherwise post the confirmed findings, blocking and non-blocking together, as **one** review — a single COMMENT review with line-anchored comments, submitted once. Then send the worker one message pointing at it. If CI on the reviewed head has gone red by now, that message also carries the failing checks and their job logs, under the flake policy in SKILL Phase 4.3. A converged round with red CI sends the logs together with the non-blocking findings. That is the entire communication for the round.
+
+If the head moved while the round was running (a conflict fix, say), still post the batch, anchored to the SHA it reviewed. The findings were verified at that SHA, and the worker drops any its push already fixed. Then count the batch as that head's round: do not start another round on the new head until the worker pushes in reply to this batch.
 
 **4. Wait.** The round is over. The lead does not answer the worker, does not clarify, does not review the worker's reply. The next wake that finds a new head SHA starts the next round against it.
 

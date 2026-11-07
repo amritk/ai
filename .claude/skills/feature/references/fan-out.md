@@ -54,6 +54,8 @@ For each slice, in this order:
 
 Workers wake in an empty container with no memory of the planning conversation. Everything they need goes in the prompt — inline, not by reference, except the plan itself which is also fetchable.
 
+A `{case: "…" | case: "…"}` block is a choice the lead makes when rendering the prompt: keep the quoted text for the case that applies to this repo (from Phase 0.4, what CI runs), and drop the braces and the other case.
+
 ```
 You are implementing one stage of an accepted plan. Work only this stage.
 
@@ -79,30 +81,41 @@ and is working in parallel right now.
 
 ## Definition of done
 1. The stage's todos are implemented, and nothing outside your Owns globs changed.
-2. `{test command}` — the full suite — passes on the head you open the PR from.
+2. `{test command}` — the full suite — passes on your PR's head.
+   {CI runs it: "CI runs it on every push, so open the PR on targeted tests and let
+   CI's run be the full one. A red result comes back to you with the round's review."
+   | CI does not run it: "Run it once yourself, after the passes below."}
 3. `{coverage command}` passes with the repo's configured thresholds. 100% coverage
    of the lines you added is the bar. If you cannot reach it, say which lines and why
    in the PR body — do NOT lower a threshold, add an ignore comment, or skip a test.
    Changing coverage configuration is out of scope for this stage, full stop.
+   {CI runs the coverage command: "CI's run is the one that counts." | it does not:
+   "Run it once yourself, together with the full suite."}
 4. `{lint command}` and `{typecheck command}` pass.
-5. Before you open the PR, run /check-iterate and fix what it confirms. If that
+5. Before you open the PR, run `/check-iterate --max-loops 2` and fix what it
+   confirms. The lead reviews the PR adversarially as soon as it opens, so this pass
+   only has to catch the cheap problems first. Do not loop until it is clean. If that
    command is not available in your session, review your own diff against
-   {default branch} adversarially yourself and fix what you find — do not skip it.
+   {default branch} adversarially yourself, once, and fix what you find. Do not skip it.
 6. Then run /simplify over the same diff and apply what it returns: reuse what the
    repo already has instead of adding a parallel version of it, drop scaffolding you
    no longer need, and keep each piece at the altitude it belongs at. If that command
-   is not available, re-read your diff for the same things. Then run the full suite
-   once, after both passes, not before each — a cleanup that breaks a test is not a
-   cleanup. This pass never changes behaviour and never widens your Owns globs.
+   is not available, re-read your diff for the same things. Then run
+   `{targeted test command}`, lint and typecheck once, after both passes, not before
+   each — a cleanup that breaks a test is not a cleanup. This pass never changes
+   behaviour and never widens your Owns globs.
 7. Open a PR from your branch to {default branch}. Title: `{stage title}`.
    Body: what changed and why, the verification commands you ran with their results,
    and `Part of #{issue number}` so it links to the run.
 
 ## Running tests without burning the session
 Every model call re-reads your whole context, so waiting is what costs you, not testing.
-- The full suite runs twice: before you open the PR, and when the lead says you are
-  next to merge. During review rounds run `{targeted test command}` for what the
-  round changed, plus lint and typecheck; CI runs the full suite on every push.
+- {CI runs the full suite: "You do not run the full suite unless the lead tells you
+  to update from {default branch}. Every other time, run `{targeted test command}`
+  for what you changed, plus lint and typecheck. CI runs the full suite on every push."
+  | it does not: "The full suite runs once before you open the PR, and again when the
+  lead tells you to update from {default branch}. During review rounds run
+  `{targeted test command}` for what the round changed, plus lint and typecheck."}
 - Commit before you start a long run, so a stop hook that checks for uncommitted
   work does not wake you while it runs.
 - Start a long run once, in the background, with its output redirected to a file,
@@ -111,8 +124,9 @@ Every model call re-reads your whole context, so waiting is what costs you, not 
   result with grep or tail, not by printing the log.
 - Do not schedule check-ins for yourself. The lead's messages and PR events wake you.
 - Do not merge {default branch} into your branch whenever it moves. Merge it when the
-  PR conflicts, or when the lead tells you you are next to merge — then regenerate
-  the generated files with the repo's tooling, run the full suite once, and push.
+  PR conflicts, or when the lead tells you to update from it before merging. Then
+  regenerate the generated files with the repo's tooling, run the full suite once,
+  and push.
 
 ## Rules
 - Push only to your own branch. Never push to {default branch}, never touch another

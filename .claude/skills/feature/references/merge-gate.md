@@ -26,9 +26,21 @@ All eight, or it does not merge.
 
 - Use the repo's configured merge method; prefer squash where the repo squashes. Delete the branch after merge.
 - **Never bypass.** No admin merge, no force-merge, no disabling a required check, no dismissing a review to get past protection. If protection blocks the merge, protection is right and the run escalates.
-- One at a time, in dependency order. After each merge, the next converged PR in order is told it is next: its worker merges the new base, regenerates generated files, runs the full suite and pushes, and its gate is re-evaluated from scratch once CI is green on that head. A PR that was green ten minutes ago is not green now — it has a new base. PRs further back are not updated after every merge; their turn brings them up to date once.
+- One at a time, in dependency order. A converged PR merges at its current head, on the CI that ran there, **unless it needs an update** from the default branch first (below). An update costs a merge, a regeneration, a full suite run and a CI cycle, one PR after another. A PR whose files no other PR touched gets nothing for that cost that the acceptance pass (`acceptance.md`) does not already check, against the whole merged result.
 - The lead writes the squash commit message at merge from the PR's final state, so the message meets the repo's convention without a review round spent on the PR body.
 - If updating a branch produces a conflict, that PR goes back to its worker. The lead does not resolve conflicts in code it did not write.
+
+### When a PR updates before it merges
+
+A PR updates from the default branch before it merges if any of these holds:
+
+1. **GitHub requires it.** `mergeable_state` is `behind` (the repo requires branches to be up to date), or the PR is conflicted (`dirty`). A conflicted PR goes back to its worker whatever its turn.
+2. **It depends on a stage that merged after its base.** It has never been tested against the code it consumes, and that is the combination most likely to break.
+3. **It changes a generated file and the default branch has moved since its base.** Generated output can depend on files the PR never touched, so it has to be regenerated against the new base.
+
+Otherwise it merges as it is. To update, message the worker to update from the default branch: it merges the new base, regenerates the generated files, runs the full suite and pushes. The gate is then re-evaluated from scratch once CI is green on that head. PRs further back in the order are never updated ahead of their turn.
+
+**A red default branch stops the run's merges.** Before merging a PR that did not update, read CI on the default branch at its current head (`actions_list`). If it is red after one of this run's merges, two PRs that were green apart have broken together. Merge nothing more. Escalate it, naming the merges since the default branch was last green. Updating the remaining PRs would only make them red as well, and the run does not repair code.
 
 ## Escalation
 
