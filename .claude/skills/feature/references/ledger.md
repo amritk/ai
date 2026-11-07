@@ -74,7 +74,7 @@ Every action the lead takes is guarded by a check that it has not already happen
 |---|---|
 | spawn a slice | branch absent **and** no PR from it |
 | open the tracking issue | no open issue titled `Feature: <slug>` |
-| start a review round | no round already logged for that PR head SHA, and the head is not conflicted (CI state does not matter) |
+| start a review round | PR not converged, no round already logged for that PR head SHA, and the head is not conflicted (CI state does not matter) |
 | send a review batch | round number not already logged for that PR head SHA |
 | merge | PR still open, and gate re-evaluated at the current head |
 | re-arm a wake | no pending trigger for this run (`list_triggers`) |
