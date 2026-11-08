@@ -6,7 +6,7 @@ The only thing standing between an autonomous worker and `main`. Every condition
 
 Evaluate **at the PR's current head SHA**, immediately before merging. A gate evaluated before an earlier merge, or before the worker's last push, is stale and must be re-run.
 
-The facts for conditions 3–6 come from one fresh `subagent_type: "run-reconciler"` agent in `gate` mode, given the PR number, the stage's `Owns` globs, and the ledger's required-checks line. It returns one table of facts at the head SHA; the lead applies the conditions. That keeps the gate's raw reads out of the lead's context, and every run reads the gate the same way instead of each lead writing its own prompt for it.
+The facts for conditions 3–6 come from one fresh `subagent_type: "run-reconciler"` agent in `gate` mode, given the PR number, the stage's `Owns` globs, the ledger's required-checks line, and the globs `CODEOWNERS` assigns to a team (the lead reads `CODEOWNERS` once in Phase 0; the reconciler has no file-reading tool). It returns one table of facts at the head SHA; the lead applies the conditions. That keeps the gate's raw reads out of the lead's context, and every run reads the gate the same way instead of each lead writing its own prompt for it.
 
 1. **Review converged** — a full round with zero blocking findings surviving verification. Not "the last round was small". Non-blocking findings sent at convergence do not hold the gate.
 2. **`skipped` and `disputed` are empty.** Anything awaiting a human call blocks the merge by definition.

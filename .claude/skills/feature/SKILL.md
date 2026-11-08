@@ -230,7 +230,7 @@ Short, whatever the outcome:
   Escalated: {one line each, or "none"}
   Learned: {proposed CLAUDE.md line, or "nothing recurring"}
   Ledger: {issue url}
-  Report: {artifact url}
+  Report: {artifact url | file name | skipped} — filled in after close-out step 7
 
 The End
 ```

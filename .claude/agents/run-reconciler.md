@@ -19,7 +19,7 @@ You are the **state collector** for one wake of a `/feature` run. The lead hands
 ## Two modes
 
 - **Wake** (the default): the lead gives you the issue number, and sometimes one stage id. With a stage id, check only that row — the wake was caused by that PR's event — and list every other row under Unchanged without reading it. Without one, check every live row.
-- **Gate**: the lead gives you a PR number, the stage's `Owns` globs, and the required checks. Skip the ledger and return the **Gate** output below.
+- **Gate**: the lead gives you a PR number, the stage's `Owns` globs, the required checks, and the globs CODEOWNERS assigns to a team. Skip the ledger and return the **Gate** output below.
 
 ## What to check, per row
 
@@ -81,4 +81,4 @@ Every fact at the PR's current head SHA, read fresh — never from the ledger:
 | default branch CI | green @ <sha> | red: `<check>` @ <sha> |
 ```
 
-A required check that is missing, pending, skipped or cancelled is not `success`: name it. Sensitive paths are workflow and CI files, release or publish scripts, coverage/lint/type-check configuration, auth/secrets/crypto code, dependency manifests, and anything CODEOWNERS assigns to a team — list each hit with its category and leave the judgement to the lead.
+A required check that is missing, pending, skipped or cancelled is not `success`: name it. Sensitive paths are workflow and CI files, release or publish scripts, coverage/lint/type-check configuration, auth/secrets/crypto code, dependency manifests, and anything matching the CODEOWNERS globs the lead passed — list each hit with its category and leave the judgement to the lead.

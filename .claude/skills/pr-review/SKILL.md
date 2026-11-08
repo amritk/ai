@@ -242,7 +242,7 @@ short enough to read at a glance — defect, failure scenario, severity.
   a human. `--dry-run` exists for trying a new prompt without spending a real review on it.
   When the ask is "review this, then merge it when it's green", the merge is not this skill's job:
   run the review here, then hand the PR to `pr-land`, which drives it to green and merges on the
-  facts at its head.
+  facts at its head. When `pr-land` is the caller, it has already taken the merge: just review.
 - **Branch mode exists so the review happens before the PR, not after it.** The findings are the
   same either way; posting them on your own PR just means a human saw the defect first. It stays
   chat-only and never opens a PR, because a mode meant to run before the PR exists must not be the

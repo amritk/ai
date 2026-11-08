@@ -69,7 +69,7 @@ before it does anything.
 | `checker` | Read-only collector. Assumes the branch's diff is broken and hunts for evidence: a concrete input, a caller that did not adapt, a test that would still pass if the code were wrong. Grounds itself in the repo's own agent guidance first so a settled convention is never a finding. |
 | `pr-adversary` | Read-only reviewer for one `feature` review round. Same mandate as `checker`, but it reads a pull request's diff through the GitHub API at a fixed head SHA rather than a local checkout, and it also polices the things only a fan-out run can get wrong: files outside the slice's lane, drift from the plan, and edits that weaken the very gates the run merges on. |
 | `verifier` | Read-only refuter. Takes another reviewer's findings and defaults to `REFUTED`, confirming only what it can trace itself. The two agents have opposite mandates on purpose: a finding has to survive both before anyone edits. |
-| `run-reconciler` | Read-only state collector for one `feature` wake. Checks every ledger row against GitHub and the worker sessions and returns only the rows that drifted, so raw PR and CI payloads never fill the long-lived lead's context. |
+| `run-reconciler` | Read-only state collector for one `feature` wake. Checks every ledger row (or just the one whose PR caused the wake) against GitHub and the worker sessions and returns only the rows that drifted; in `gate` mode it returns the merge gate's facts for one PR at its head. Either way, raw PR and CI payloads never fill the long-lived lead's context. |
 
 All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` at low, since collection is wide and parallel and the judgment calls stay with the orchestrator.
 

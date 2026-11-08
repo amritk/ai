@@ -2,26 +2,6 @@
 name: pr-land
 description: Take an open pull request all the way to merged — optionally review it first, then watch it, fix red CI and conflicts on it, and merge on green at the exact head that was verified. Use for "merge it when it's green", "review this PR then merge it", "fix the conflicts and get this merged", "land #123", "get these merged", or right after opening a PR that should go to main without being watched. One PR, or a short list in order; planned multi-PR work from requirements is /feature.
 argument-hint: "<pr number | url> [more PRs…] [--review] [--no-merge]"
-allowed-tools:
-  - Read
-  - Grep
-  - Glob
-  - Edit
-  - Write
-  - Skill
-  - ToolSearch
-  - Bash(git status:*)
-  - Bash(git diff:*)
-  - Bash(git log:*)
-  - Bash(git fetch:*)
-  - Bash(git rev-parse:*)
-  - Bash(git remote:*)
-  - mcp__github__pull_request_read
-  - mcp__github__list_pull_requests
-  - mcp__github__actions_list
-  - mcp__github__actions_get
-  - mcp__github__get_check_run
-  - mcp__github__get_job_logs
 ---
 
 # pr-land
@@ -45,7 +25,7 @@ Invoke with `/pr-land <pr> [more…] [--review] [--no-merge]`.
 
 ## Phase 1: Review, if asked
 
-Run `pr-review <n>` with the user's review instruction (or its default). On the user's own PR, fix every blocking finding before driving to merge. On someone else's, the review is the deliverable: post it and stop unless told to merge regardless.
+Run `pr-review <n>` with only the review part of the user's ask — what to look for, never "then merge it" — or with its default prompt. The merge stays here. Where `pr-review` is not available, review the diff against its base adversarially yourself, once. On the user's own PR, fix every blocking finding before driving to merge. On someone else's, the review is the deliverable: post it and stop unless told to merge regardless.
 
 ## Phase 2: Watch without polling
 

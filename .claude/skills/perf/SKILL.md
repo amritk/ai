@@ -2,22 +2,6 @@
 name: perf
 description: Make something measurably faster, or prove it cannot be made faster cheaply — name the metric and the hardware the result is judged on, take an interleaved same-machine baseline with a noise band, profile before changing code, keep output identical to the baseline, and end in a PR or a "no change, here is the data" page. Use for "/perf", "make X faster", "can we save any performance on…", "optimise the hot path", "profile this", "benchmark ours against theirs", "why is theirs so fast", "did we get faster?", or whenever a speed claim is about to rest on a single run.
 argument-hint: "[what to speed up, or the benchmark to beat] [--target <hardware>] [--no-fix]"
-allowed-tools:
-  - Read
-  - Grep
-  - Glob
-  - Edit
-  - Write
-  - Skill
-  - Bash(git status:*)
-  - Bash(git diff:*)
-  - Bash(git log:*)
-  - Bash(git show:*)
-  - Bash(git stash:*)
-  - Bash(git worktree:*)
-  - Bash(nproc:*)
-  - Bash(uname:*)
-  - Bash(lscpu:*)
 ---
 
 # perf
@@ -81,7 +65,7 @@ If the judging hardware is reachable — a CI benchmark job, a runner of the rig
 Every session ends in one of two visible outcomes. A session that measured, found nothing, and stopped silently leaves the user asking "did we do anything?".
 
 - **A win** → a PR. The body carries a table — metric, baseline median ± spread, candidate median ± spread, n, noise band, hardware — the exact commands to reproduce it, the correctness evidence (oracle diff clean, tests green), and the changes that were tried and reverted.
-- **No win** → no PR, and a page through the `session-report` skill: what was measured, the profile, what was tried with each result, and why nothing shipped. "No change, here is the data" is a finished result.
+- **No win** → no PR, and a page through the `session-report` skill (where it is not available, a short Markdown write-up handed to the user): what was measured, the profile, what was tried with each result, and why nothing shipped. "No change, here is the data" is a finished result.
 
 ## Summary
 
