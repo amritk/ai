@@ -6,6 +6,8 @@ The only thing standing between an autonomous worker and `main`. Every condition
 
 Evaluate **at the PR's current head SHA**, immediately before merging. A gate evaluated before an earlier merge, or before the worker's last push, is stale and must be re-run.
 
+The facts for conditions 3–6 come from one fresh `subagent_type: "run-reconciler"` agent in `gate` mode, given the PR number, the stage's `Owns` globs, and the ledger's required-checks line. It returns one table of facts at the head SHA; the lead applies the conditions. That keeps the gate's raw reads out of the lead's context, and every run reads the gate the same way instead of each lead writing its own prompt for it.
+
 1. **Review converged** — a full round with zero blocking findings surviving verification. Not "the last round was small". Non-blocking findings sent at convergence do not hold the gate.
 2. **`skipped` and `disputed` are empty.** Anything awaiting a human call blocks the merge by definition.
 3. **CI green on this head.** Every required check concluded `success`. Not "green on the previous commit", not "the failure looks unrelated". A required check that never ran is not green.
@@ -24,7 +26,7 @@ All eight, or it does not merge.
 
 ## Merging
 
-- Use the repo's configured merge method; prefer squash where the repo squashes. Delete the branch after merge.
+- Use the repo's configured merge method; prefer squash where the repo squashes. Pass the full 40-character head SHA as the expected head, never a short one: the API rejects short SHAs. Leave branch deletion to the repo's auto-delete setting. Deleting a branch from the session is usually refused as destructive; if it is, do not retry, and list the branch in the close-out comment instead.
 - **Never bypass.** No admin merge, no force-merge, no disabling a required check, no dismissing a review to get past protection. If protection blocks the merge, protection is right and the run escalates.
 - One at a time, in dependency order. A converged PR merges at its current head, on the CI that ran there, **unless it needs an update** from the default branch first (below). An update costs a merge, a regeneration, a full suite run and a CI cycle, one PR after another. A PR whose files no other PR touched gets nothing for that cost that the acceptance pass (`acceptance.md`) does not already check, against the whole merged result.
 - The lead writes the squash commit message at merge from the PR's final state, so the message meets the repo's convention without a review round spent on the PR body.

@@ -24,6 +24,10 @@ Title `Feature: <slug>`, label `feature-run`, body:
 - plan: `feature/{slug}/plan` → `.claude/plans/{slug}.plan.md`
 - flags: max-slices {N}, max-rounds {N}, {--no-merge if set}
 - verification: test `{cmd}` · coverage `{cmd}` · lint `{cmd}` · types `{cmd}`
+- required checks: {every check name that must conclude success at a PR's head, e.g. `test (shard 1..8)`, `lint`, `nish-cmp`}
+- ci → local: `{job}` → `{cmd}` · … 
+- known environment failures: {suites that fail in a worker container regardless of the change, or "none"}
+- report: {publish | file}
 - bounds: deadline {ISO timestamp} · no-branch 45m · no-commit 90m · re-runs 1 per check per head · check-ins 30→60→120m on no drift, capped at the shortest running silence timeout
 
 ## Acceptance

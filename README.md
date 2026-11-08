@@ -49,13 +49,18 @@ skills and nothing else.
 | `pr-triage` | Reads the whole open PR queue and publishes one page rating every PR Low → Critical, with a "start here" list. |
 | `async-daily` | Writes an async standup grouped by pull request — what merged, what is still open, plus local work that is not a PR yet. Covers every repo you touched, not just the ones checked out. |
 | `debug` | Reproduce, localise, hypothesise, fix, prove: root-causes a bug or flaky test and leaves a regression test behind. `--no-fix` stops at the diagnosis. |
+| `pr-land` | Drives one PR (or a short list) to merged: optional review through `pr-review`, then watches it, fixes red CI and conflicts on branches you own, and merges on green at the exact head it verified. The per-PR half of `feature`, for work that was not planned as a run. |
+| `perf` | Makes something measurably faster or shows it cannot be: names the metric and the hardware the result is judged on, takes an interleaved baseline with a noise band, profiles before changing code, checks output against the baseline, and ends in a PR or a "no change, here is the data" page. |
 | `qa` | Runs a QA pass on a feature in a real browser — Claude in Chrome where the session has it, a Playwright fallback where it does not — reproduces every failure before reporting it, and publishes a report with a verdict, findings, evidence, and what was not covered. |
 
 `check`, `check-iterate`, and `plan-execute` stage their work; none of them commit.
 `debug` edits but never stages or commits. `async-daily`, `session-report`, and `qa` are read-only in the repo; `session-report` publishes an artifact and may comment its link on the branch's PR, and `qa` publishes one too. `qa` is the only skill here that touches something outside the repo — a running app — so it confirms the target with you before it starts and refuses destructive checks against production.
-`feature` is the exception to all of it — it commits, pushes, opens PRs, and merges
-them, which is why it is the only skill here that stops for an explicit human
-approval before it does anything.
+`perf` edits and may open a PR for a measured win. `pr-land` pushes fixes only to a
+branch you own or asked it to drive, and merges only the PRs you named — asking it is
+the approval.
+`feature` is the exception to all of it — it plans, commits, pushes, opens PRs, and merges
+them on its own, which is why it stops for an explicit human approval of the plan
+before it does anything.
 
 **Agents**
 
@@ -93,7 +98,7 @@ See [`evals/README.md`](evals/README.md) for what it grades and how to add a cas
 ## Where these came from
 
 Most of the workflow and convention skills were collected from other repos;
-`async-daily`, `debug`, `qa`, `session-report`, `feature`, and the `verifier`
+`async-daily`, `debug`, `qa`, `session-report`, `feature`, `pr-land`, `perf`, and the `verifier`
 and `pr-adversary` agents were written here. `typescript` and `tests` existed in
 several divergent copies — the richest of each was taken and the repo-specific
 commands generalised.
