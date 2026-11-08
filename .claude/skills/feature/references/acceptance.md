@@ -60,6 +60,13 @@ Nothing is asked of you except to find out whether it works.
 Acceptance criteria:
 {numbered criteria}
 
+Read the repo's CLAUDE.md first; its rules win over this prompt. Add no attribution
+footer or session link to your comment unless CLAUDE.md asks for one.
+
+Run anything long (a build, a benchmark, a full suite) once in the background with
+its output in a file, then end your turn — you are woken when it exits. No `sleep`
+or `until` loops.
+
 1. Check out {default branch} at {merge SHA} and install dependencies.
 2. Run /qa with those criteria as the checklist, against the app running locally.
    Reproduce every failure before you report it. If /qa is not available in your
@@ -75,7 +82,7 @@ Do not fix anything. Do not open a PR, a branch, or an issue. If the feature is
 broken, the comment saying so precisely is the whole job.
 ```
 
-The dynamic pass runs as a session rather than in the lead because it needs a checkout, a running app, and a browser — that is a worker's shape, and the lead stays a reader. It reports the way every other worker does: **observable state, not a reply.** Cloud sessions have no channel back to the lead (`fan-out.md`), so the marker line is what makes the verdict findable on a wake hours later, and what tells "spawned, not finished" apart from "never spawned".
+The dynamic pass runs as a session rather than in the lead because it needs a checkout, a running app, and a browser — that is a worker's shape, and the lead stays a reader. It reports the way every other worker does: **observable state, not a reply.** A message to the lead would be gone after the lead's next compaction (`fan-out.md`), so the marker line is what makes the verdict findable on a wake hours later, and what tells "spawned, not finished" apart from "never spawned".
 
 **When there is nothing to drive** — no browser-exercisable surface, `/qa` unavailable, or `--no-qa` — the dynamic pass narrows to the plan's verification commands run against the merged branch by the same session, and the report says in as many words that the feature was never exercised by hand. A static-only acceptance must never read as a full one.
 

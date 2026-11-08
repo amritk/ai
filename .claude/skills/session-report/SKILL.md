@@ -73,9 +73,11 @@ Write the file to the scratchpad, never into the repo.
 
 Publish with the Artifact tool: favicon `📋`, description "Run report for {title} on {branch}: what changed, what was verified, findings and fixes, and what needs a human." Keep the same file path when re-running in one session so the URL is stable.
 
-The report is a Claude artifact with a link, not a file: this phase is not done until the tool has returned a URL. Only where the Artifact tool is genuinely absent from the session, or `--no-publish` was passed, hand the HTML file to the user and say so.
+The report is a Claude artifact with a link, not a file: this phase is not done until the tool has returned a URL. Only where the Artifact tool is genuinely absent from the session, `--no-publish` was passed, or the user declined the publish, hand the HTML file to the user (`SendUserFile` where the session has it) and say so. A declined publish is an answer: do not ask again in the same session.
 
-When the branch has a pull request, add one comment on it with the link so reviewers find the report where they are looking, ending with the attribution footer:
+A session that changed no code still gets a page. An investigation, a benchmark, or a comparison that ended in "no change" is finished work too, and the page says what was measured, what was decided, and why there is no PR.
+
+When the branch has a pull request, add one comment on it with the link so reviewers find the report where they are looking. End it with the attribution footer below, unless the repo's `CLAUDE.md` forbids tool attribution, in which case the repo wins and the comment carries none:
 
 ```
 ---

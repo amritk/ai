@@ -74,7 +74,7 @@ Invoke with `/feature [requirements | plan slug] [flags]`.
 - `--deadline <duration>`: wall-clock ceiling for the whole run (default **8h**). At the deadline the lead stops spawning, finishes the rounds already in flight, escalates whatever has not merged, and closes out. A run with no deadline does not fail, it just never admits it has.
 - `--no-merge`: run everything up to the merge gate, then stop with PRs green and report. Acceptance (Phase 7) does not run — nothing merged, so there is nothing to accept — and the report says the criteria were never checked. Use this the first few times against a new repo.
 - `--no-qa`: skip the dynamic half of acceptance (Phase 7). The static pass still runs, and the report says the feature was never exercised. Use it for a repo with no runnable surface, not to save time.
-- `--no-report`: skip publishing the run through the `session-report` skill at close-out. The tracking issue and the terminal summary are still written.
+- `--no-report`: skip the `session-report` write-up at close-out. The tracking issue and the terminal summary are still written. Whether a report is *published* or only handed over as a file is asked once, at sign-off.
 - `--status <slug>`: read the ledger for an existing run and report; change nothing.
 - `--abort <slug>`: stop a run — see **Aborting**.
 
@@ -97,6 +97,8 @@ Check all of these before touching anything. Any failure stops the run with the 
    - **The targeted test command**: how to run only the part of the suite a change touches (a file, a section, a filter). Workers use it before the PR and during review rounds, and keep the full suite for the moments that need it (`references/fan-out.md`). When the full suite takes more than a few minutes this is the largest single saving in the run, because every full run is a wait the worker is woken from.
    - **What CI runs**: whether the PR workflow runs the full test command and the coverage command, read from `.github/workflows/`. If it runs both, workers open the PR on targeted tests and CI's run is the full one. If it skips either, the worker runs that command itself once before opening the PR. The worker prompt is written for whichever case applies.
    - **Generated files**: the globs of files the repo regenerates with its own tooling (goldens, snapshots, lockfiles, generated docs). Reviewers skip them, and a conflict in one is regenerated, never resolved by hand.
+   - **CI job → local command**: for every job in the PR workflow, the local command that runs what that job runs. Read it from the job's steps, not from the script names — a CI lint job that also runs a generator `--check` or a dead-code pass is not `npm run lint`. Past workers spent six red-CI cycles on one PR because their local lint skipped steps CI ran. The table goes verbatim into every worker prompt.
+   - **Known environment failures**: run the test command once on the base SHA in this container and record what fails there regardless of any change (a missing cross-compiler, a platform-only suite). Workers are told not to investigate these; without the list, each one rediscovers them.
 5. **Environment and permissions.** `list_environments` to resolve the environment workers inherit. Note the lead's own permission mode: **workers cannot be more permissive than the lead**, so if the lead is running in a mode that prompts, workers will stall unattended. If the lead cannot pre-approve the worker toolset, stop and say which permission the run needs.
 6. **What the workers inherit.** A worker created without an explicit `environment_id` inherits the lead's environment, and with it the same linked repos — so the skills available here are normally available there too. Confirm which of `check-iterate`, `simplify`, `debug`, and the repo's convention skills the workers will actually have, and render the worker prompt accordingly: a prompt that tells a worker to run a slash command it does not have wastes a round. The fallbacks are in `references/fan-out.md`.
 7. **No run already in flight.** Search for an open tracking issue for this slug (`Feature: <slug>`, label `feature-run`). If one exists, switch to `--status` behaviour and report instead of starting a duplicate run.
@@ -114,7 +116,7 @@ Skip if a plan slug was given and its file already exists.
 3. Order stages by dependency. A stage that must land before another is a **merge-order edge**, recorded in the ledger; it does not have to block that stage's *development*, only its merge.
 4. **Pre-flight the slicing** — the mechanical checks in `references/fan-out.md`: every stage complete, every `Owns` glob resolving to real paths, concurrent stages disjoint, every file the todos need owned by exactly one stage, dependency graph acyclic. Fix failures in the plan and re-run it. This costs seconds and it is the only chance to catch a bad slice before four containers are already acting on it.
 5. **Write the acceptance criteria** — numbered, observable, derived from the requirements and not from the stages, per `references/acceptance.md`. They are what Phase 7 checks the merged result against. Writing them now, before any code exists, is the point: criteria written at the end get written to match what was built.
-6. Present the plan **and the criteria** and **stop**. This is the one human gate in the whole run — use `AskUserQuestion` to take sign-off, an edit, or a cancel. Do not spawn anything until the plan is accepted. The criteria are part of what is being accepted: they are the sentence the run will be judged by, and this is the last moment a human sees them.
+6. Present the plan **and the criteria** and **stop**. This is the one human gate in the whole run — use `AskUserQuestion` to take sign-off, an edit, or a cancel. In the same call, ask whether the run report should be published as an artifact at close-out or handed over as a file (default: file), and record the answer in the ledger. Asked here, it costs nothing; asked at close-out, it is a prompt nobody is awake for. Do not spawn anything until the plan is accepted. The criteria are part of what is being accepted: they are the sentence the run will be judged by, and this is the last moment a human sees them.
 
 With `--dry-run`, print the fan-out table (slice, branch, owns, model, depends-on, verification command), the pre-flight result, and the criteria — then stop here.
 
@@ -124,9 +126,9 @@ With `--dry-run`, print the fan-out table (slice, branch, owns, model, depends-o
 
 Workers clone `main` into empty containers, so the plan must exist on the remote before anyone spawns.
 
-1. Commit the plan file and push it to `feature/<slug>/plan`. Do not merge it and do not push to the default branch.
+1. Commit the plan file and push it to `feature/<slug>/plan`. Do not merge it and do not push to the default branch. The commit follows the repo's own commit rules from `CLAUDE.md` — if it forbids attribution trailers or session links, the commit carries none, whatever the session's default is. A plan branch with a forbidden trailer is a cleanup left for the human. The same goes for every comment and message the lead writes: no attribution footer where the repo forbids one.
 2. Open the tracking issue — title `Feature: <slug>`, label `feature-run` — with the ledger table from `references/ledger.md`, one row per slice, all `pending`. **The issue is the run's only durable state.** The lead's container and context will not survive the run; the issue will.
-3. Record in the issue body: `owner/repo`, base SHA, plan branch, the verification commands from Phase 0, the flags in effect, the round/slice budgets, the bounds from Phase 0.8, and the acceptance criteria as their own table.
+3. Record in the issue body: `owner/repo`, base SHA, plan branch, the verification commands from Phase 0 with the CI job → local command table, the required checks, and the known environment failures, the report choice from sign-off, the flags in effect, the round/slice budgets, the bounds from Phase 0.8, and the acceptance criteria as their own table.
 
 ---
 
@@ -150,7 +152,9 @@ Every wake also re-reads the lead's whole context, so a wake that changes nothin
 
 0. **Drop echoes first.** When every event in the wake is the lead's own action coming back — `review_comment.created` or `review.submitted` for a review the lead just posted, `subscription.created`, `pr.closed` for a PR the lead just merged, a CI run starting — end the turn with one line. Do not reconcile, do not reply, do not re-arm. Only an event someone else caused (a worker push, a CI result, a human comment, a worker message, a failed session) runs the cycle below.
 
-1. **Collect state.** Spawn one fresh `subagent_type: "run-reconciler"` agent with `owner/repo` and the issue number. It reads the ledger and checks every live row against GitHub and `get_session`: branch, PR, CI on the current head, mergeable state, review activity, worker `status_bucket`. It returns only the rows that drifted, plus the clocks. Act on its table, not on raw API reads. The lead's context lasts the whole run, so a full set of PR and CI payloads on every wake is the most expensive thing the lead can do. Fetch a raw payload yourself only when the action needs it: job logs to hand to a worker, or the gate's final read before a merge (`references/merge-gate.md`). Anything the reconciler reports as `unknown` gets a direct read, never a guess.
+   **Further CI failures on a head already in hand are echoes too.** A PR's checks fail one at a time, and each failure is its own event: one past run took ten wakes in 24 minutes, each re-reading 325k tokens, to learn that shard after shard had failed on a commit the worker was already fixing. Act on the **first** red result for a head SHA and on its check suite completing. A further failure on that same head, once its failures are already logged as sent or held for a round, is an echo. So is any CI event on a head that is no longer the PR's head. End those wakes in one line.
+
+1. **Collect state.** Spawn one fresh `subagent_type: "run-reconciler"` agent with `owner/repo` and the issue number — and, when the wake was caused by one PR's event, that PR's stage id, so it checks only that row. A scheduled check-in checks every row. It reads the ledger and checks every live row against GitHub and `get_session`: branch, PR, CI on the current head, mergeable state, review activity, worker `status_bucket`. It returns only the rows that drifted, plus the clocks. Act on its table, not on raw API reads. The lead's context lasts the whole run, so a full set of PR and CI payloads on every wake is the most expensive thing the lead can do. Past leads that skipped the reconciler made dozens of ad-hoc API calls per wake and wrote a fresh "read the gate for PR N" agent prompt each time; do neither. The gate's read before a merge is the reconciler too, in its `gate` mode (`references/merge-gate.md`). Fetch a raw payload yourself only when the action needs it: job logs to hand to a worker. Anything the reconciler reports as `unknown` gets a direct read, never a guess.
 2. **Write back** every drifted row to the ledger and log the drift. It, not memory, is the state.
 3. **Act on exactly one thing per row**, in this priority order:
    - Worker `failed`, or silent past one of the timeouts in `references/fan-out.md` → respawn once, escalate on the second failure.
@@ -193,13 +197,16 @@ Criteria belonging to an escalated slice are marked `escalated` without being ch
 
 ## Phase 8: Close out
 
-1. Unless `--no-report` was passed, publish the run through the **`session-report` skill** and put the artifact link on the tracking issue. A `feature` run is the case `session-report` exists for: hours of work across several PRs that nobody watched, where the only alternative record is a log nobody will read. Give it the ledger as its source — what was asked, what each slice changed, what was verified, every finding with its verdict, the acceptance table, and what escalated.
-2. **Propose what the run learned.** Group the review findings by root cause across slices: a mistake several workers made independently, or a false positive the collectors kept raising, is a repo convention nobody wrote down. Put the `CLAUDE.md` line you would add — verbatim and ready to paste, with the PRs that motivated it — in the closing comment and the report. Propose it; never commit it (`references/acceptance.md`).
-3. Final comment on the tracking issue: the outcome table, what merged, the acceptance result, what escalated and why, the proposed conventions, and the report link.
-4. `unsubscribe_pr_activity` for every PR; `delete_trigger` for the run's check-ins; archive the worker sessions, acceptance included.
+Everything that tells the human how the run went comes first; anything that might wait on a permission prompt comes last. In every past run that reached close-out, the report publish waited on a prompt for between ten minutes and ten hours and was then declined, and the final comment, the cleanup and the notification all sat behind it.
+
+1. **Propose what the run learned.** Group the review findings by root cause across slices: a mistake several workers made independently, or a false positive the collectors kept raising, is a repo convention nobody wrote down. Put the `CLAUDE.md` line you would add — verbatim and ready to paste, with the PRs that motivated it — in the closing comment and the report. Propose it; never commit it (`references/acceptance.md`).
+2. **Write the next step.** If the plan, a follow-up issue, or an escalation leaves work undone, write the `/feature` prompt that would pick it up — requirements, what is already on the default branch with PR numbers, and what this run learned — in one fenced block, ready to paste. Users asked for this by hand after most past runs.
+3. Final comment on the tracking issue: the outcome table, what merged, the acceptance result, what escalated and why, the proposed conventions, the next-step prompt, and any branches left behind.
+4. `unsubscribe_pr_activity` for every PR; `delete_trigger` for the run's check-ins; archive the worker sessions, acceptance included. If a cleanup step is refused (deleting a branch or archiving a session can be), do not retry it: list what is left, with the command to remove it, in the final comment.
 5. Close the issue only if every slice merged **and** every criterion was met. An escalation leaves it open — that is the handoff.
 6. Report to the human (see below), and `PushNotification` the one-line outcome. The run started because nobody wanted to watch it; it ends by telling them how it went.
-7. Type `The End` as the very last line of the final message. It is the unambiguous signal that the run is over and no wake will follow — so it belongs only here, after every step above has run.
+7. **The run report, last.** Unless `--no-report` was passed, write the run through the **`session-report` skill**, with the ledger as its source — what was asked, what each slice changed, what was verified, every finding with its verdict, the acceptance table, and what escalated. Publish it as an artifact only if the human said yes to that at sign-off (Phase 1.6); otherwise run it with `--no-publish` and hand the file over with `SendUserFile`. If publishing is declined anyway, fall back to the file and do not ask again. Add the link or file name to the tracking issue.
+8. Type `The End` as the very last line of the final message. It is the unambiguous signal that the run is over and no wake will follow — so it belongs only here, after every step above has run.
 
 ---
 
@@ -223,7 +230,7 @@ Short, whatever the outcome:
   Escalated: {one line each, or "none"}
   Learned: {proposed CLAUDE.md line, or "nothing recurring"}
   Ledger: {issue url}
-  Report: {artifact url}
+  Report: {artifact url | file name | skipped} — filled in after close-out step 7
 
 The End
 ```
