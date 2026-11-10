@@ -71,7 +71,7 @@ before it does anything.
 | `verifier` | Read-only refuter. Takes another reviewer's findings and defaults to `REFUTED`, confirming only what it can trace itself. The two agents have opposite mandates on purpose: a finding has to survive both before anyone edits. |
 | `run-reconciler` | Read-only state collector for one `feature` wake. Checks every ledger row (or just the one whose PR caused the wake) against GitHub and the worker sessions and returns only the rows that drifted; in `gate` mode it returns the merge gate's facts for one PR at its head. Either way, raw PR and CI payloads never fill the long-lived lead's context. |
 
-All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` at low, since collection is wide and parallel and the judgment calls stay with the orchestrator.
+`checker`, `pr-adversary`, and `run-reconciler` run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` at low, since collection is wide and parallel and the judgment calls stay with the orchestrator. `verifier` runs on Opus 5.5 at medium effort: it decides which findings reach a fix or a merge, it sees only the deduplicated findings, and a model different from the collectors' does not share their blind spots.
 
 **Conventions**
 

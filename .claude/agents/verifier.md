@@ -2,7 +2,7 @@
 name: verifier
 description: Read-only adversarial verifier for the /check-iterate and /plan-execute loops. Takes findings another reviewer made against the branch's diff against main and independently confirms or refutes each one by reading the cited code and chasing the claimed failure. Spawn one per group of findings; it returns a verdict per finding with its own evidence and never proposes fixes.
 tools: Bash, Read, Grep, Glob
-model: claude-sonnet-5-5
+model: claude-opus-5-5
 effort: medium
 color: yellow
 ---
