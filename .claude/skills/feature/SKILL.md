@@ -206,7 +206,8 @@ Everything that tells the human how the run went comes first; anything that migh
 5. Close the issue only if every slice merged **and** every criterion was met. An escalation leaves it open — that is the handoff.
 6. Report to the human (see below), and `PushNotification` the one-line outcome. The run started because nobody wanted to watch it; it ends by telling them how it went.
 7. **The run report, last.** Unless `--no-report` was passed, write the run through the **`session-report` skill**, with the ledger as its source — what was asked, what each slice changed, what was verified, every finding with its verdict, the acceptance table, and what escalated. Publish it as an artifact only if the human said yes to that at sign-off (Phase 1.6); otherwise run it with `--no-publish` and hand the file over with `SendUserFile`. If publishing is declined anyway, fall back to the file and do not ask again. Add the link or file name to the tracking issue.
-8. Type `The End` as the very last line of the final message. It is the unambiguous signal that the run is over and no wake will follow — so it belongs only here, after every step above has run.
+8. **List what needs a human.** After the report is written, gather every item that still needs someone to act or decide into one list, and put it directly above `The End`. Sources: escalated slices and their reasons, criteria that were PARTIAL or NOT MET, follow-up issues opened, PRs left open, red CI on the default branch, the proposed `CLAUDE.md` line (a decision: add it or not), the next-step `/feature` prompt (run it or not), cleanup that was refused and what is left behind, and every item in the report's "Needs a human call" section. Each item is one line: the action or decision, then the link or the command. Leave out anything already done — merged PRs, fixed findings, met criteria and finished cleanup belong in the summary above, not here. Merge duplicates: an escalation that is also in the report appears once. If nothing needs action, write `Action items: none`.
+9. Type `The End` as the very last line of the final message. It is the unambiguous signal that the run is over and no wake will follow — so it belongs only here, after every step above has run.
 
 ---
 
@@ -232,8 +233,15 @@ Short, whatever the outcome:
   Ledger: {issue url}
   Report: {artifact url | file name | skipped} — filled in after close-out step 7
 
+Action items:
+  - [ ] {action or decision needed} — {link | command}
+  ...
+  {or "Action items: none"}
+
 The End
 ```
+
+The action items are close-out step 8: only what still needs someone to act or decide, nothing that is already done, and the report's "Needs a human call" items folded in. They sit last so the reader finishes on what to do next.
 
 `The End` closes the summary only when the run is complete — Phase 8 has finished. A `--status` report, a `--dry-run`, an abort, and any mid-run wake never print it, because the line means nothing is left running.
 
