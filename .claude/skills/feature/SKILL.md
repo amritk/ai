@@ -236,12 +236,11 @@ Short, whatever the outcome:
 Action items:
   - [ ] {action or decision needed} — {link | command}
   ...
-  {or "Action items: none"}
 
 The End
 ```
 
-The action items are close-out step 8: only what still needs someone to act or decide, nothing that is already done, and the report's "Needs a human call" items folded in. They sit last so the reader finishes on what to do next.
+The action items are close-out step 8: only what still needs someone to act or decide, nothing that is already done, and the report's "Needs a human call" items folded in. When nothing needs action, the whole block is the single line `Action items: none`. They sit last so the reader finishes on what to do next.
 
 `The End` closes the summary only when the run is complete — Phase 8 has finished. A `--status` report, a `--dry-run`, an abort, and any mid-run wake never print it, because the line means nothing is left running.
 
