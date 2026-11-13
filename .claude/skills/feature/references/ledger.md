@@ -39,8 +39,8 @@ Title `Feature: <slug>`, label `feature-run`, body:
 ## Slices
 | stage | owns | model | depends on | session | branch | PR | CI | rounds | state |
 |---|---|---|---|---|---|---|---|---|---|
-| api-types | `src/types/**` | sonnet | — | `session_01ABC…` | `feature/foo/api-types` | #41 | green | 2/10 | merged |
-| api-client | `src/client/**` | lead | api-types | `session_01DEF…` | `feature/foo/api-client` | #42 | red | 1/10 | fixing |
+| api-types | `src/types/**` | sonnet | — | `session_01ABC…` | `feature/foo/api-types` | #41 | green | 2/6 | merged |
+| api-client | `src/client/**` | lead | api-types | `session_01DEF…` | `feature/foo/api-client` | #42 | red | 1/6 | fixing |
 | ui-panel | `src/ui/panel/**` | lead | api-client | — | — | — | — | — | pending |
 | _acceptance_ | — | sonnet | all | `session_01GHI…` | — | — | — | — | running |
 
@@ -58,7 +58,7 @@ Keep the log append-only and one line per event. It is the only record of why a 
 
 ## The stateless wake protocol
 
-Every wake, without exception, in this order:
+Every wake that is not an echo (SKILL Phase 4.0), in this order:
 
 1. **Read the issue.** Do not act on anything you remember. If your context still holds the run, treat it as a cache to be validated, not a source.
 2. **Reconcile each row against reality.** The ledger is a claim; GitHub is the fact. A fresh `run-reconciler` agent does steps 1 and 2 and returns only the drift, so the PR and CI payloads below never reach the lead's context. These are the calls it makes:

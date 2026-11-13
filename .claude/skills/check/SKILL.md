@@ -117,7 +117,7 @@ If the review is clean, say so in the terminal rather than forcing a plan file (
 
 ## Phase 4: Terminal summary
 
-Short (< ~10 lines): counts per dimension, the single most important item, the plan path. Point at the file; do not restate the plan.
+Short: counts per dimension, the single most important item, the plan path. Point at the file; do not restate the plan.
 
 ```
 /check complete: {S} security, {R} reliability, {C} consistency items across {F} changed files.

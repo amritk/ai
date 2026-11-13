@@ -205,7 +205,7 @@ Raw failures are not findings yet. For each one:
    file path on re-runs in one session so the URL stays stable. With
    `--no-publish`, or where the Artifact tool is genuinely absent, hand over
    the HTML file and say so.
-4. **Terminal summary**, under ten lines: the verdict, the link, the counts,
+4. **Terminal summary**, short: the verdict, the link, the counts,
    then the critical and major findings one line each, then what was not
    covered. The page is the report; do not restate it.
 
