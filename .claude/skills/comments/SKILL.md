@@ -60,7 +60,6 @@ Not acceptable:
 ## Comment guidelines
 
 - Avoid contractions in comments. Use "do not" instead of "don't", "it is" instead of "it's", and similar forms.
-- If you use contractions, make sure they have proper apostrophes.
 - Comment on types when their purpose is not obvious.
 - Explain relationships between types when they are not clear.
 - Document utility types or generic types when their intent is non-obvious.
