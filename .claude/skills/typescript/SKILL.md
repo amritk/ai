@@ -35,11 +35,6 @@ Write TypeScript that is clear, predictable, and easy to maintain. The goal is a
 - Always use `const` instead of `let`.
 - Use `satisfies` instead of `as`.
 
-## Naming conventions
-
-- Be descriptive.
-- Use suffixes appropriately.
-
 ## ESM directory and filename
 
 This codebase uses ES Modules. Do not use `__dirname` or `__filename` as they are not available in ESM. Use `import.meta.dirname` and `import.meta.filename` instead:
@@ -151,7 +146,6 @@ Bad:
 ```
 
 - Avoid contractions in comments. Use "do not" instead of "don't", "it is" instead of "it's", etc. This makes comments easier to read, especially for non-native speakers.
-- If you use contractions, make sure they have proper apostrophes. Sometimes contractions can make a comment more approachable. If you choose to use them, use proper punctuation.
 - Comment on types when their purpose is not obvious. If a type models an external API, or has a non-obvious constraint, explain it.
 - Explain relationships between types when they are not clear.
 

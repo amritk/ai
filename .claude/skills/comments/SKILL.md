@@ -1,6 +1,6 @@
 ---
 name: comments
-description: Write comments and JSDoc that explain why rather than what — documenting intent, constraints, and non-obvious decisions without narrating the change that produced them. Use when adding comments or JSDoc, reviewing over- or under-commented code, or writing global CSS where a selector sits far from the markup it serves.
+description: Write comments and JSDoc that explain why rather than what — documenting intent, constraints, and non-obvious decisions without narrating the change that produced them. Use when adding comments or JSDoc, or reviewing over- or under-commented code.
 ---
 # Comments and Documentation
 

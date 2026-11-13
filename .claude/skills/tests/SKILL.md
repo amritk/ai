@@ -110,7 +110,7 @@ Before adding a Chromium flag on the theory that it stabilises rendering, prove 
 
 ```ts
 import { describe, it, expect } from 'vitest'
-import { generateSlug } from './custom-function'
+import { generateSlug } from './custom-lib'
 
 describe('custom-lib', () => {
   describe('generateSlug', () => {

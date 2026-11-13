@@ -144,7 +144,7 @@ Keep the same file path on re-runs in one session so the URL stays stable.
 
 ## Phase 4: Terminal summary
 
-Keep it under about fifteen lines. Lead with the link, then the counts as a
+Keep it short. Lead with the link, then the counts as a
 small table, then the "review with care" picks in one line each, then the
 quick merges. Close with the two caveats that always apply: GitHub often has
 not computed mergeability, so the conflict count is a lower bound; and a rating

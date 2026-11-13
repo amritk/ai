@@ -81,7 +81,7 @@ One addition to the collector focus in every loop: include a pointer to the plan
 
 ## Phase 4: Terminal summary
 
-Short (< ~12 lines):
+Short — the template below and nothing more:
 
 ```
 /plan-execute: {plan path}

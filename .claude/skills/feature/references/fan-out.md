@@ -48,7 +48,7 @@ For each slice, in this order:
 
 **3. Record the returned session id in the ledger before spawning the next slice.** This is not bookkeeping; it is the only copy. `list_sessions` tag filtering is OAuth-only and errors for in-session callers, so a lead that loses a session id cannot get it back — it can only find the *branch*, and will have to respawn to touch the work again.
 
-**4. Subscribe and arm.** `subscribe_pr_activity` once the PR exists; `send_later` a first check-in 15 minutes out. Later check-ins back off while nothing drifts (SKILL Phase 4.6). The lead is the only session subscribed to a slice's PR. A PR's events go to one session at a time, so a worker that subscribes can take them away from the lead, and every CI event then wakes the worker for nothing. The worker prompt forbids it. If a wake shows the lead is not receiving a PR's events (a CI result the reconciler found that no event reported), call `subscribe_pr_activity` again and tell that worker to unsubscribe.
+**4. Subscribe and arm.** `subscribe_pr_activity` once the PR exists; `send_later` a first check-in 30 minutes out. Later check-ins back off while nothing drifts (SKILL Phase 4.6). The lead is the only session subscribed to a slice's PR. A PR's events go to one session at a time, so a worker that subscribes can take them away from the lead, and every CI event then wakes the worker for nothing. The worker prompt forbids it. If a wake shows the lead is not receiving a PR's events (a CI result the reconciler found that no event reported), call `subscribe_pr_activity` again and tell that worker to unsubscribe.
 
 ## The worker prompt
 

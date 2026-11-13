@@ -124,10 +124,10 @@ If a loop's confirmed findings are **identical** to the previous loop's (same `f
 
 ## Final summary
 
-Short (< ~12 lines), whatever the exit reason:
+Short, whatever the exit reason — the template below and nothing more:
 
 ```
-/check-iterate: {consensus reached after N loops | loop cap (7) hit | stalemate after N loops}
+/check-iterate: {consensus reached after N loops | loop cap ({max loops}) hit | stalemate after N loops}
 
   Loop 1: {X} findings → {Y} confirmed → fixed
   Loop 2: ...
