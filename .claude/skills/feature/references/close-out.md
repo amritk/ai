@@ -4,24 +4,38 @@ The action items list (close-out step 8) is what is left for a human to decide. 
 
 ## The selection prompt
 
-Once the summary and its `Action items:` block are printed, call `AskUserQuestion` once, with the items the lead can act on.
+Once the summary and its `Action items:` block are printed, ask about the items the lead can act on with `AskUserQuestion`.
 
 **What can be offered.** An item can be offered only when the lead can carry it out in this session, with a tool it holds, and the result can be checked afterwards. Examples: merge a PR whose gate passes, open one more review round, delete a leftover branch, edit or delete a comment the run posted, open a PR adding the proposed `CLAUDE.md` line, start or chain the next-step run. An item that only a human can do stays in the printed list and is never an option: anything that needs their own credentials or account (publishing to npm, a secret, a release outside GitHub), a judgement about product direction, or a fix the human said they would make themselves.
 
-**How the questions are built.** The tool takes 1–4 questions with 2–4 options each, and adds "Other" by itself.
+**One decision per question, with everything needed to decide it.** The human answers from the dialog alone. They may be on a phone, with the summary scrolled away. They should never need to open the PR to understand the choice. So each action item gets its own single-select question, built like this:
 
-- An item with more than one way forward gets its own single-select question, with one option per path. Example: "PR #1657 is blocked on three sentences after six review rounds" → `Run a 7th review round` / `Merge as it is` / `Leave it for me`.
-- Do-it-or-not items go in one `multiSelect` question, "Which of these should I do now?", one option each. An unpicked option means "leave it".
-- The next-step run always gets its own question (see below).
-- Order the questions by what unblocks the most. If more than four questions or options are needed, offer the ones that unblock the most. The rest stay in the printed list, and the prompt's last question says how many were left out.
+- **The question** states the situation in two to four sentences, then asks. Cover what is blocked and where (PR, job or file, as a link or `owner/repo#N`), why it is blocked (the concrete cause, with names: the file, the rule, the finding), what the obvious fix is and why the lead did not just make it (outside the stage's owned files, needs a decision, against a repo rule). End with the question itself: "How should I fix it?", "Should I merge it?".
+- **Each option** is one path forward. The label is a short imperative (`Exempt .refcache`, `Run a 7th review round`). The description says exactly what the lead will do if it is picked: which file, which command, which comment. Then it gives the trade-off or cost in one clause: what is lost, what extra is touched, what stays broken.
+- **The option you would pick** goes first, with ` (Recommended)` on its label. Its description says why, if that is not obvious from the trade-off.
+- **Always offer a way to leave it**, for example `Leave it for me` or `Leave it red`. Its description says what is left behind and where it is noted, for example "Push nothing; note the blocker on the PR for whoever picks it up."
 
-Each question must stand on its own. The human may see only the dialog, not the summary above it, so name the PR or branch and say what the option will do. Label the option you would choose `(Recommended)` and put it first.
+An example, for a lint job failing on a run's PR:
+
+> **Question:** CI's lint job on owner/repo#1659 is failing because `scripts/check-filenames.mjs` rejects the committed kramdown-rfc cache files (`.refcache/reference.RFC.4648.xml` and others), whose names kramdown-rfc dictates. The clean fix is a one-line exemption for `.refcache/` in `scripts/check-filenames.mjs`, but that file is outside the stage's owned files. How should I fix it?
+>
+> - **Exempt .refcache (Recommended):** Add `.refcache/` to the exempt roots in `scripts/check-filenames.mjs`, with a comment that kramdown-rfc names these files. One extra file outside the owned list.
+> - **Stop committing .refcache:** Gitignore `.refcache/`. `build-spec.sh --check` then needs `--fetch` (network access to bib.ietf.org) in a fresh checkout, so the offline, reproducible build is lost.
+> - **Leave it red:** Push nothing; note the blocker on the PR for whoever picks it up.
+
+Write it from what the run already knows: the ledger, the review findings, the escalation reason. Never write "see the PR". If the lead does not know the cause well enough to write the question, it cannot offer a fix either, so the item stays in the printed list.
+
+**Housekeeping** can share one `multiSelect` question, "Which of these should I do now?": deleting leftover branches, editing comments the run posted, archiving a session that refused to archive. These are items with only one way forward and nothing to weigh. Each option's description still names exactly what will be touched (the branch names, the comment links). An unpicked option means "leave it".
+
+**The next-step run** always gets its own question (see below).
+
+**How many.** The tool takes 1–4 questions per call, with 2–4 options each, and adds "Other" by itself. Order the questions by what unblocks the most, and ask them in calls of up to four until every offerable item has been asked. The human is there answering, so a second call costs nothing. Stop at the first call that is dismissed or answered with nothing.
 
 **What a pick authorises.** A pick authorises exactly the action on that option, once, and nothing more. "Merge #1657" is not "merge whatever else is green". A merge picked here still goes through the merge gate (`references/merge-gate.md`): if the gate fails, report why and leave the PR. A pick does not override the repo's rules either. If the repo forbids something, say so and skip it.
 
 **After the answers.** Carry out the picks in the order of the questions. Report each one's result in one line. Then print the action items again with what was done ticked (`- [x]`) and what is left unticked. Post the same list to the tracking issue, so the record matches. Then print `The End`.
 
-If the human dismisses the prompt, answers nothing, or every pick is "leave it", act on nothing and print `The End` after the unchanged list. Do not ask a second time. If no item can be offered, skip the prompt.
+If the human dismisses a prompt or answers nothing, act on nothing from that call, ask no further calls, and carry out only what earlier calls picked. Never ask the same item twice. If no item can be offered, skip the prompt.
 
 ## Chaining the next run
 
