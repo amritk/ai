@@ -27,6 +27,7 @@ allowed-tools:
   - mcp__Claude_Code_Remote__create_trigger
   - mcp__Claude_Code_Remote__list_triggers
   - mcp__Claude_Code_Remote__delete_trigger
+  - mcp__Claude_Code_Remote__update_trigger
   - mcp__Claude_Code_Remote__subscribe_pr_activity
   - mcp__Claude_Code_Remote__unsubscribe_pr_activity
   - mcp__github__issue_read
@@ -42,6 +43,8 @@ allowed-tools:
   - mcp__github__merge_pull_request
   - mcp__github__list_branches
   - mcp__github__get_file_contents
+  - mcp__github__list_releases
+  - mcp__github__list_tags
   - mcp__github__get_check_run
   - mcp__github__actions_list
   - mcp__github__actions_get
@@ -200,14 +203,15 @@ Criteria belonging to an escalated slice are marked `escalated` without being ch
 Everything that tells the human how the run went comes first; anything that might wait on a permission prompt comes last. In every past run that reached close-out, the report publish waited on a prompt for between ten minutes and ten hours and was then declined, and the final comment, the cleanup and the notification all sat behind it.
 
 1. **Propose what the run learned.** Group the review findings by root cause across slices: a mistake several workers made independently, or a false positive the collectors kept raising, is a repo convention nobody wrote down. Put the `CLAUDE.md` line you would add — verbatim and ready to paste, with the PRs that motivated it — in the closing comment and the report. Propose it; never commit it (`references/acceptance.md`).
-2. **Write the next step.** If the plan, a follow-up issue, or an escalation leaves work undone, write the `/feature` prompt that would pick it up — requirements, what is already on the default branch with PR numbers, and what this run learned — in one fenced block, ready to paste. Users asked for this by hand after most past runs.
-3. Final comment on the tracking issue: the outcome table, what merged, the acceptance result, what escalated and why, the proposed conventions, the next-step prompt, and any branches left behind.
-4. `unsubscribe_pr_activity` for every PR; `delete_trigger` for the run's check-ins; archive the worker sessions, acceptance included. If a cleanup step is refused (deleting a branch or archiving a session can be), do not retry it: list what is left, with the command to remove it, in the final comment.
+2. **Write the next step.** If the plan, a follow-up issue, or an escalation leaves work undone, write the `/feature` prompt that would pick it up — requirements, what is already on the default branch with PR numbers, and what this run learned — in one fenced block, ready to paste. Under it, list the run's **prerequisites**: each thing that must be true before the next run can start (a PR merged, a release published, a version on npm), as a line the lead can check by machine (`references/close-out.md`). Users asked for this by hand after most past runs.
+3. Final comment on the tracking issue: the outcome table, what merged, the acceptance result, what escalated and why, the proposed conventions, the next-step prompt and its prerequisites, and any branches left behind.
+4. `unsubscribe_pr_activity` for every PR; `delete_trigger` for the run's check-ins (a chained next-run watcher set up in step 9 is not a check-in, and stays); archive the worker sessions, acceptance included. If a cleanup step is refused (deleting a branch or archiving a session can be), do not retry it: list what is left, with the command to remove it, in the final comment.
 5. Close the issue only if every slice merged **and** every criterion was met. An escalation leaves it open — that is the handoff.
 6. Report to the human (see below), and `PushNotification` the one-line outcome. The run started because nobody wanted to watch it; it ends by telling them how it went.
 7. **The run report, last.** Unless `--no-report` was passed, write the run through the **`session-report` skill**, with the ledger as its source — what was asked, what each slice changed, what was verified, every finding with its verdict, the acceptance table, and what escalated. Publish it as an artifact only if the human said yes to that at sign-off (Phase 1.6); otherwise run it with `--no-publish` and hand the file over with `SendUserFile`. If publishing is declined anyway, fall back to the file and do not ask again. Add the link or file name to the tracking issue.
-8. **List what needs a human.** After the report is written, gather every item that still needs someone to act or decide into one list, and put it directly above `The End`. Sources: escalated slices and their reasons, criteria that were PARTIAL or NOT MET, follow-up issues opened, PRs left open, red CI on the default branch, the proposed `CLAUDE.md` line (a decision: add it or not), the next-step `/feature` prompt (run it or not), cleanup that was refused and what is left behind, and every item in the report's "Needs a human call" section. Each item is one line: the action or decision, then the link or the command. Leave out anything already done — merged PRs, fixed findings, met criteria and finished cleanup belong in the summary above, not here. Merge duplicates: an escalation that is also in the report appears once. If nothing needs action, write `Action items: none`.
-9. Type `The End` as the very last line of the final message. It is the unambiguous signal that the run is over and no wake will follow — so it belongs only here, after every step above has run.
+8. **List what needs a human.** After the report is written, gather every item that still needs someone to act or decide into one list, and put it last in the summary, right before the selection prompt in step 9. Sources: escalated slices and their reasons, criteria that were PARTIAL or NOT MET, follow-up issues opened, PRs left open, red CI on the default branch, the proposed `CLAUDE.md` line (a decision: add it or not), the next-step `/feature` prompt (run it or not), cleanup that was refused and what is left behind, and every item in the report's "Needs a human call" section. Each item is one line: the action or decision, then the link or the command. Leave out anything already done — merged PRs, fixed findings, met criteria and finished cleanup belong in the summary above, not here. Merge duplicates: an escalation that is also in the report appears once. If nothing needs action, write `Action items: none`.
+9. **Let the human act on them by picking.** Print the summary with its action items, then ask with `AskUserQuestion` about the items the lead can carry out itself, one decision per question. Each question carries the whole situation: what is blocked, why, and the obvious fix. Each option says exactly what will be done and what it costs, with the recommended option first. Items the lead can carry out include: merge a PR, open one more review round, delete a leftover branch, open a PR with the `CLAUDE.md` line. The next-step run always gets its own question: start it now, start it automatically once its prerequisites are met, or leave it. Do what was picked and nothing more; a picked merge still goes through the merge gate. A pick that has to wait for CI or a review round goes to a fresh session running `/pr-land`, because nothing wakes this lead after cleanup. Then print the list again with what was done ticked, and post it to the tracking issue. If a prompt is dismissed, act on nothing from it and ask nothing more. Items only a human can do stay in the list and are never options. How to build the questions and the prerequisite watcher: `references/close-out.md`. Skip this step if nothing can be offered.
+10. Type `The End` as the very last line of the final message. It is the unambiguous signal that the run is over and no wake will follow — so it belongs only here, after every step above has run, including the picks from step 9. A chained next run does not delay it: the watcher is its own scheduled task, and this run is over.
 
 ---
 
@@ -236,11 +240,23 @@ Short, whatever the outcome:
 Action items:
   - [ ] {action or decision needed} — {link | command}
   ...
+```
+
+Then the selection prompt (close-out step 9). After the picks are carried out:
+
+```
+Done:
+  {one line per pick: what was done, or why it was not}
+
+Action items:
+  - [x] {item that was done}
+  - [x] Next run chained: starts when {prerequisites} — cancel with delete_trigger {id}
+  - [ ] {item left for a human}
 
 The End
 ```
 
-The action items are close-out step 8: only what still needs someone to act or decide, nothing that is already done, and the report's "Needs a human call" items folded in. When nothing needs action, the whole block is the single line `Action items: none`. They sit last so the reader finishes on what to do next.
+The action items are close-out step 8: only what still needs someone to act or decide, nothing that is already done, and the report's "Needs a human call" items folded in. When nothing needs action, the whole block is the single line `Action items: none`. They sit last so the reader finishes on what to do next, and the selection prompt lets the reader do it by picking instead of typing.
 
 `The End` closes the summary only when the run is complete — Phase 8 has finished. A `--status` report, a `--dry-run`, an abort, and any mid-run wake never print it, because the line means nothing is left running.
 
