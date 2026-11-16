@@ -31,7 +31,9 @@ Write it from what the run already knows: the ledger, the review findings, the e
 
 **How many.** The tool takes 1–4 questions per call, with 2–4 options each, and adds "Other" by itself. Order the questions by what unblocks the most, and ask them in calls of up to four until every offerable item has been asked. The human is there answering, so a second call costs nothing. Stop at the first call that is dismissed or answered with nothing.
 
-**What a pick authorises.** A pick authorises exactly the action on that option, once, and nothing more. "Merge #1657" is not "merge whatever else is green". A merge picked here still goes through the merge gate (`references/merge-gate.md`): if the gate fails, report why and leave the PR. A pick does not override the repo's rules either. If the repo forbids something, say so and skip it.
+**Picks that have to wait go to a new session.** By the time of this prompt, close-out step 4 has unsubscribed every PR, deleted the check-ins and archived the workers, so nothing will wake this lead again. A pick the lead can finish now and check right away, it does here: a merge whose gate passes at the current head, deleting a branch, editing a comment, opening the `CLAUDE.md` PR. A pick that has to wait for CI, for a review round, or for a worker to push fixes goes to a fresh session. Start it with `create_session`, with the prompt `/pr-land <owner/repo#N>`, plus `--review` for another review round, and add one sentence on why the PR is open and what was picked. Tick it as `handed to <session link>`. Do not keep this run alive to wait.
+
+**What a pick authorises.** A pick authorises exactly the action on that option, once, and nothing more. "Merge #1657" is not "merge whatever else is green". A merge picked here still goes through the merge gate (`references/merge-gate.md`). If the gate fails only because CI is still running, hand the PR to `/pr-land` as above. If it fails for any other reason, report why and leave the PR. A pick does not override the repo's rules either. If the repo forbids something, say so and skip it.
 
 **After the answers.** Carry out the picks in the order of the questions. Report each one's result in one line. Then print the action items again with what was done ticked (`- [x]`) and what is left unticked. Post the same list to the tracking issue, so the record matches. Then print `The End`.
 
@@ -61,7 +63,7 @@ The next-step `/feature` prompt (close-out step 2) often cannot start yet. For e
 
 1. The prerequisites, each with its check.
 2. The next-step `/feature` prompt, verbatim.
-3. Its own trigger id and the give-up date: 7 days from now, or whatever the human typed under "Other".
+3. Its own trigger id and the give-up date: 7 days from now, or whatever the human typed under "Other". `create_trigger` returns the id only after the prompt is stored, so create the trigger first, then use `update_trigger` to replace its prompt with one that includes the id. Without the id, the fired session cannot switch the trigger off.
 4. These instructions: check every prerequisite. If any is unmet and the give-up date has not passed, end without doing anything. If all are met, start the next run with `create_session`, comment the new session's link on the tracking issue, send a `PushNotification`, and switch the trigger off with `update_trigger` (`enabled: false`). A session a trigger started cannot delete that trigger. If the give-up date has passed, switch the trigger off, comment which prerequisite was still unmet, and send a `PushNotification`.
 
 The chained run stops at its own plan sign-off, like any other `/feature` run. Chaining saves the wait, not the human gate. That is why a chained start is safe to leave alone.
