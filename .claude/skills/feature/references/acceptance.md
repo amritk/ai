@@ -48,6 +48,7 @@ One cloud session against the merged default branch — the **acceptance session
 | field | value |
 |---|---|
 | `prompt` | the acceptance prompt below, fully rendered |
+| `append_system_prompt` | the standing rules from `fan-out.md`, rendered with the acceptance case |
 | `title` | `feature/<slug>: acceptance` |
 | `tags` | `["feature:<slug>", "feature-acceptance"]` |
 | `outcome_branch` | omitted — this session writes no code |
@@ -60,8 +61,8 @@ Nothing is asked of you except to find out whether it works.
 Acceptance criteria:
 {numbered criteria}
 
-Read the repo's CLAUDE.md first; its rules win over this prompt. Add no attribution
-footer or session link to your comment unless CLAUDE.md asks for one.
+Read the repo's CLAUDE.md first; its rules win over this prompt. Your standing
+rules are at the end of your system prompt, and they still hold while /qa runs.
 
 Run anything long (a build, a benchmark, a full suite) once in the background with
 its output in a file, then end your turn — you are woken when it exits. No `sleep`
@@ -78,8 +79,8 @@ or `until` loops.
    table of criterion → pass/fail → evidence, the QA report link if one was
    published, and what you could not exercise and why.
 
-Do not fix anything. Do not open a PR, a branch, or an issue. If the feature is
-broken, the comment saying so precisely is the whole job.
+Do not fix anything. If the feature is broken, the comment saying so precisely
+is the whole job.
 ```
 
 The dynamic pass runs as a session rather than in the lead because it needs a checkout, a running app, and a browser — that is a worker's shape, and the lead stays a reader. It reports the way every other worker does: **observable state, not a reply.** A message to the lead would be gone after the lead's next compaction (`fan-out.md`), so the marker line is what makes the verdict findable on a wake hours later, and what tells "spawned, not finished" apart from "never spawned".
