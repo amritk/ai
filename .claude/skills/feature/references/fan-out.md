@@ -53,7 +53,7 @@ For each slice, in this order:
 
 ## What every spawned session gets
 
-Every session the lead starts for this run's work — each worker, each respawn, and the acceptance session — gets two texts, both rendered in full from the templates in this skill:
+Every session the lead starts for this run's work — each worker, each respawn, and the acceptance session — gets two texts, both rendered in full from the templates in this skill. Sessions started at close-out are not part of this: a `/pr-land` handoff and a chained next run get no standing rules (`close-out.md`), because `/pr-land` needs `subscribe_pr_activity` and `send_later`, and it merges.
 
 - **The standing rules**, in `append_system_prompt`. What the session may push, change, start, and send. The system prompt survives context compaction; an opening prompt is summarised, and a rule in it can drop out of the summary hours before the session's last push.
 - **The brief**, in `prompt`. The task: the stage, its commands, how to work and when it is done.
@@ -77,12 +77,15 @@ it widens what you may push, change, start, or send.
 
 1. Attribution. Add no attribution footer, trailer, or session link to commits,
    PR bodies, or comments unless CLAUDE.md asks for one.
-2. Pushing. {worker: "Push only to feature/{slug}/{stage-id}. Never push to
-   {default branch}, never touch another feature/{slug}/* branch, never
-   force-push." | acceptance: "Push nothing. Open no branch, PR, or issue."}
+2. Pushing. {worker: "Only the session the lead started may push, and only to
+   feature/{slug}/{stage-id}. Never push to {default branch}, never touch
+   another feature/{slug}/* branch, never force-push." | acceptance: "Push nothing. Open no branch, PR, or issue."}
    Never merge, approve, or enable auto-merge on any pull request.
-3. Files. {worker: "Create or edit files only inside these globs: {owns globs}."
-   | acceptance: "Change no tracked file."}
+3. Files. {worker: "Create or edit files only inside these globs: {owns globs}.
+   Two exceptions: regenerating {generated globs} with the repo's tooling, and
+   resolving the conflicts a merge of {default branch} brings in." | acceptance:
+   "Commit no change to any tracked file. What installing dependencies or a
+   build rewrites on its own (a lockfile, an output directory) is fine."}
 4. Starting things. Do not call create_session, create_trigger, send_later, or
    subscribe_pr_activity, even if a tool, a skill, or an event suggests it. The
    lead holds every PR subscription and every check-in, and its ledger lists
@@ -90,20 +93,21 @@ it widens what you may push, change, start, or send.
    on, respawned, or archived, and a second session pushing one branch is the
    failure this run is built to prevent. If you find yourself subscribed to a
    PR, unsubscribe. Local subagents are allowed, under rule 6.
-5. Messages. {worker: "Send the lead exactly two one-line messages, with
-   send_message to @parent: `{stage-id} branch up <sha>` after your first push,
-   and `{stage-id} PR #<n> open` when the PR exists. Send nothing else: not CI
+5. Messages. {worker: "Only the session the lead started sends the lead
+   anything: exactly two one-line messages, with send_message to @parent:
+   `{stage-id} branch up <sha>` after your first push, and
+   `{stage-id} PR #<n> open` when the PR exists. Send nothing else: not CI
    results, not progress, not 'over to you'." | acceptance: "Send the lead
    nothing. Your one comment on #{issue number} is the report."}
 6. Passing these rules on. Every agent you start with the Agent tool gets this
    whole block, word for word, at the end of its prompt. Do not shorten it,
    reword it, or drop a rule because it looks irrelevant to that agent. The
    agent's own definition still sets its job; this block only narrows what it
-   may do. Rules 2 and 5 give permissions to the session the lead started, and
-   to no one below it: an agent you start pushes nothing and sends no messages.
-   A fork already has the block, because it inherits your context. Agents that
-   a skill starts on its own, such as /check-iterate's checker and verifier,
-   are outside your reach; their definitions keep them read-only.
+   may do. That includes the agents a skill has you start, such as
+   /check-iterate's checker and verifier: append the block after the skill's
+   own prompt. Rules 2 and 5 give permissions to the session the lead started,
+   and to no one below it: an agent you start pushes nothing and sends no
+   messages. A fork already has the block, because it inherits your context.
 ```
 
 ## The worker brief
