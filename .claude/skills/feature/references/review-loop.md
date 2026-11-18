@@ -10,7 +10,7 @@ A round is: **collect → verify → batch → wait**. It happens entirely at on
 
 A red check that comes in while a round on that head is still running waits for the round. The job logs go to the worker in the round's batch message (step 3), so the worker makes one push for both, not one push for the check and another for the findings. Hold it for no longer than that round.
 
-**1. Collect.** Spawn `subagent_type: "pr-adversary"` agents, all in a single message so they run concurrently. Use one agent for a diff under ~400 changed lines. Above that, use one per shard of roughly that size, split along file boundaries. More shards on a small diff add cost without adding coverage, and each extra collector also feeds more findings to the verifier. Each gets the PR number, the head SHA, the stage's `Owns` globs, the stage's todos, the round number, the generated-file globs, and **the path of a diff file the lead wrote once for this head**:
+**1. Collect.** Spawn `subagent_type: "pr-adversary"` agents, all in a single message so they run concurrently. Use one agent for a diff under ~400 changed lines. Above that, use one per shard of roughly that size, split along file boundaries. More shards on a small diff add cost without adding coverage, and each extra collector also feeds more findings to the verifier. Each gets the PR number, the head SHA, the stage's `Owns` globs, the stage's todos, the round number, the generated-file globs, and **the path of a diff file the lead wrote once for this head**. The `Owns` globs are pasted verbatim, with every amendment the ledger logs for the stage, into every `pr-adversary` prompt and every gate prompt — never summarised, never abbreviated. A collector checks scope against the list it was given, so a shortened list turns every file it leaves out into a scope finding; one past round-5 collector raised a false one exactly that way.
 
 ```
 git fetch origin feature/{slug}/{stage-id}
@@ -53,8 +53,10 @@ If the head moved while the round was running (a conflict fix, say), still post 
 
 Every finding carries a `blocking` verdict from the collector, which the verifier confirms along with the finding.
 
-- **Blocking** — a correctness or soundness bug with a concrete failing input, a security hole, a scope or gate-integrity violation, a todo with no change, a test that cannot fail. These open a round and hold the merge.
+- **Blocking** — a correctness or soundness bug with a concrete failing input, a security hole, a scope or gate-integrity violation, a todo with no change, a test that cannot fail, a change that weakens a property the default branch pins. These open a round and hold the merge.
 - **Non-blocking** — naming, style, comment and doc wording, test additions beyond what pins the change, PR-body or commit-message prose, a performance delta inside its noise band. These never open a round on their own. They ride along with a blocking batch, or go to the worker once at convergence as "apply in one push if cheap, no further review". The next round does not re-check them.
+
+**A collector's rating is not final in either direction, and a downgrade is the one that ships.** A change that weakens a property the default branch pins — a proof, a capability verdict, a `proven: true` in a checked-in report — is blocking even when no test fails. The pinned report is the test, so "no test pins it" is not a reason to downgrade. Before accepting a non-blocking rating on such a change, the lead compares the default branch's pinned report with the PR head's. In one past run a round-4 collector rated a std function losing its panic-freedom proof as non-blocking; the lead upgraded it after that comparison.
 
 Two kinds of finding cost past runs whole rounds and get a fixed policy here instead:
 

@@ -26,6 +26,7 @@ Title `Feature: <slug>`, label `feature-run`, body:
 - verification: test `{cmd}` · coverage `{cmd}` · lint `{cmd}` · types `{cmd}`
 - required checks: {every check name that must conclude success at a PR's head, e.g. `test (shard 1..8)`, `lint`, `nish-cmp`}
 - ci → local: `{job}` → `{cmd}` · … 
+- skipped on PRs by design: `{job}` (`if: {condition}`) · … , or "none"
 - known environment failures: {suites that fail in a worker container regardless of the change, or "none"}
 - report: {publish | file}
 - bounds: deadline {ISO timestamp} · no-branch 45m · no-commit 90m · re-runs 1 per check per head · check-ins 30→60→120m on no drift, capped at the shortest running silence timeout
@@ -77,6 +78,7 @@ Every action the lead takes is guarded by a check that it has not already happen
 | action | guard |
 |---|---|
 | spawn a slice | branch absent **and** no PR from it |
+| respawn a slice to amend its `Owns` | new globs disjoint from every live sibling, amendment logged, old session archived, and no respawn already logged as done for that amendment — the branch and PR existing is expected (`fan-out.md`) |
 | open the tracking issue | no open issue titled `Feature: <slug>` |
 | start a review round | PR not converged, no round already logged for that PR head SHA, and the head is not conflicted (CI state does not matter) |
 | send a review batch | round number not already logged for that PR head SHA |
