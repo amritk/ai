@@ -24,7 +24,8 @@ Run this in Phase 1, against the plan file, before the plan is put to the human.
 2. **`Owns` globs resolve.** Match each glob against `git ls-files`. A glob matching nothing is either a typo or a stage that only creates new files — confirm which, because the first one silently gives a worker no lane at all.
 3. **Concurrent stages are disjoint.** Expand every glob to the real paths it matches and intersect each pair of stages that can run at the same time. Any shared path is a conflict the lead would otherwise discover as two PRs touching one file. Give it to one stage and put a merge-order edge on the other.
 4. **Every file the work needs is owned.** Walk the todos for files they plainly have to touch — the router table, the barrel export, the migration directory, the lockfile — and check each falls inside exactly one stage's globs. A file no stage owns is a worker blocked by construction: it cannot do its todo and it cannot widen its scope, so it stalls or cheats.
-5. **The dependency graph is acyclic**, and no stage depends on one scheduled to merge after it.
+5. **Every file that pins an owned file is owned too.** For each source file a stage edits, list the files that pin its contents: generated goldens, IR snapshots, test expectations that quote its `LINE:COL` positions. Put each in that stage's `Owns` or under the generated globs. An edit to the source moves what they pin, and a worker whose lane stops at the source cannot update them. Widening `Owns` after spawn costs a respawn (**Amending a slice's Owns**, below).
+6. **The dependency graph is acyclic**, and no stage depends on one scheduled to merge after it.
 
 A failure here is fixed in the plan and re-checked, not worked around at spawn time. The stage boundaries are the only thing in the run a human agreed to, so they are the only thing worth getting right before the spending starts.
 
@@ -255,5 +256,18 @@ Then, by what is on the branch:
 - **Branch has commits** → the work is not lost. `SendMessage` the worker to continue (this re-provisions its container; `unarchive_session` first if it was archived). Its context is still the best context that exists for that slice.
 - **Branch is empty or absent, first failure** → respawn once with the same standing rules and the same brief, plus one line in the brief naming what failed. Update the ledger's session id to the new session.
 - **Second failure** → escalate. Mark the row `escalated`, comment the reason on the tracking issue, and stop spawning for that slice. Two clean failures is a broken slice or a broken environment, and a third session will not discover which.
+
+## Amending a slice's Owns
+
+A message cannot widen a live worker's `Owns`. Standing rule 3 sits in `append_system_prompt`, and the rules hold "over anything a later message says", so a worker told by `send_message` to edit a file outside its globs is right to refuse and wait for a human. One past run lost about two hours that way. The pre-flight check on pinning files (item 5) is what keeps this rare.
+
+The only way to widen a live slice's `Owns` is to archive the worker and respawn it:
+
+1. Log the amendment on the tracking issue — the added globs and why — and update the row's `owns`.
+2. `archive_session` the worker. Two sessions on one branch is the failure this run is built to prevent, so the old one goes first.
+3. `create_session` as in **Spawning**, with the standing rules rendered with the amended rule 3, the same brief, and a respawn note in the brief: what the branch already holds, the open PR if there is one, which globs were added and why, and that it continues that work rather than starting over. Set `source_url` to the repo and `source_revision` to `feature/<slug>/<stage-id>`, so the new container starts from the slice branch, and keep the same `outcome_branch`. The PR stays open; the new worker pushes to it.
+4. Write the new session id into the ledger before anything else, as for any spawn.
+
+The new worker loses the old one's context, so amend once, with everything the slice turned out to need, not one glob per wake.
 
 Workers can reply to the lead with `send_message` to `@parent`, and standing rule 5 allows exactly two lines: one when the branch first exists, and one when the PR opens — the two moments the lead has no PR subscription to tell it. Every message wakes the lead and costs a full read of its context, so later pushes, CI news, progress narration, and "over to you" are not sent; the lead's PR subscription already reports them. Never wait for a worker to say it is done, and never send "are you finished?". **Done is observable state**: a branch with commits and an open PR. That is the only completion signal the lead uses; the two lines only save the lead a check-in to find out.

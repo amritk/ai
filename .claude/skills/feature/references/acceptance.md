@@ -77,7 +77,9 @@ or `until` loops.
 4. Post ONE comment on issue #{issue number}, beginning with the exact line
    <!-- feature:acceptance --> and containing: a verdict line (SHIP or FAIL), a
    table of criterion → pass/fail → evidence, the QA report link if one was
-   published, and what you could not exercise and why.
+   published, and what you could not exercise and why — including, by name,
+   the CI jobs that never run on a PR: {jobs skipped on PRs by design, or "none"}.
+   Their checks first run at release.
 
 Do not fix anything. If the feature is broken, the comment saying so precisely
 is the whole job.
