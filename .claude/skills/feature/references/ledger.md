@@ -78,7 +78,7 @@ Every action the lead takes is guarded by a check that it has not already happen
 | action | guard |
 |---|---|
 | spawn a slice | branch absent **and** no PR from it |
-| respawn a slice to amend its `Owns` | amendment logged, old session archived, and no respawn already logged for that amendment (`fan-out.md`) |
+| respawn a slice to amend its `Owns` | new globs disjoint from every live sibling, amendment logged, old session archived, and no respawn already logged as done for that amendment — the branch and PR existing is expected (`fan-out.md`) |
 | open the tracking issue | no open issue titled `Feature: <slug>` |
 | start a review round | PR not converged, no round already logged for that PR head SHA, and the head is not conflicted (CI state does not matter) |
 | send a review batch | round number not already logged for that PR head SHA |
