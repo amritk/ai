@@ -55,7 +55,7 @@ These are optional fields on top of the `plan` skill's staged schema. The script
 ```yaml
 roadmap: docs/roadmap/wp49.md   # a human-facing page, linked from the parent
 spec: docs/wp49.md              # the design note, linked from the parent
-priority: 10                    # Roadmap order; default 100
+priority: 10                    # Roadmap order; a plan with neither priority nor issue is not filed
 labels: [ready]                 # parent: ready | needs-decision | deferred
 issue: 1900                     # written by this skill
 stages:

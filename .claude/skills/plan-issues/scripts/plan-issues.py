@@ -14,7 +14,9 @@ has no token a script could use.
     plan-issues.py record <plan> [--parent N] [--stage <id>=N ...]
 
 With no plans named, every `.claude/plans/*.plan.md` under the current
-directory that carries a `stages` list is read.
+directory that opts in is read: it carries `stages` and a `priority` or an
+`issue`. A plan a single `/feature` run wrote for itself carries neither, and
+is not filed.
 
 `render` prints one JSON object: `{"plans": [...]}`, ordered by `priority`
 (lower first, then file name). Each plan has `file`, `issue`, `labels`,
@@ -322,7 +324,7 @@ def plan_paths(names: list[str]) -> list[pathlib.Path]:
         except PlanError:
             paths.append(p)  # let check report it
             continue
-        if data.get("stages"):
+        if data.get("stages") and ("priority" in data or "issue" in data):
             paths.append(p)
     return paths
 
