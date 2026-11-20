@@ -25,7 +25,7 @@ An example, for a lint job failing on a run's PR:
 
 Write it from what the run already knows: the ledger, the review findings, the escalation reason. Never write "see the PR". If the lead does not know the cause well enough to write the question, it cannot offer a fix either, so the item stays in the printed list.
 
-**Housekeeping** can share one `multiSelect` question, "Which of these should I do now?": deleting leftover branches, editing comments the run posted, archiving a session that refused to archive, and **Archive this session** (the lead itself), offered when every slice merged and nothing escalated. Archiving the lead ends the conversation, so do that pick last, after `The End` has been printed; everything the run knows is already on the tracking issue. These are items with only one way forward and nothing to weigh. Each option's description still names exactly what will be touched (the branch names, the comment links). An unpicked option means "leave it".
+**Housekeeping** can share one `multiSelect` question, "Which of these should I do now?": deleting leftover branches, editing comments the run posted, archiving a session that refused to archive, and **Archive this session** (the lead itself), offered when every slice merged and nothing escalated. Archiving the lead ends the conversation, so this pick runs last of all (see **After the answers**). These are items with only one way forward and nothing to weigh. Each option's description still names exactly what will be touched (the branch names, the comment links). An unpicked option means "leave it".
 
 **The next-step run** always gets its own question (see below).
 
@@ -35,7 +35,7 @@ Write it from what the run already knows: the ledger, the review findings, the e
 
 **What a pick authorises.** A pick authorises exactly the action on that option, once, and nothing more. "Merge #1657" is not "merge whatever else is green". A merge picked here still goes through the merge gate (`references/merge-gate.md`). If the gate fails only because CI is still running, hand the PR to `/pr-land` as above. If it fails for any other reason, report why and leave the PR. A pick does not override the repo's rules either. If the repo forbids something, say so and skip it.
 
-**After the answers.** Carry out the picks in the order of the questions. Report each one's result in one line. Then print the action items again with what was done ticked (`- [x]`) and what is left unticked. Post the same list to the tracking issue, so the record matches. Then print `The End`.
+**After the answers.** Carry out the picks in the order of the questions. Report each one's result in one line. Then print the action items again with what was done ticked (`- [x]`) and what is left unticked. Post the same list to the tracking issue, so the record matches. Then print `The End`. If **Archive this session** was picked, it is the one pick not carried out in order: list it on the tracking issue as `archiving the lead after this comment`, not ticked, and make `archive_session` on this session (`get_session` with no id gives its id) the very last tool call, after `The End`. If it is refused, say so in one line in chat; the tracking issue is not edited again.
 
 If the human dismisses a prompt or answers nothing, act on nothing from that call, ask no further calls, and carry out only what earlier calls picked. Never ask the same item twice. If no item can be offered, skip the prompt.
 
