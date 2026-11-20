@@ -7,19 +7,19 @@ place instead of being copied between them.
 
 Three ways, depending on where the session runs.
 
-**As a plugin (local CLI, desktop and IDE sessions).** This repo is a plugin marketplace (`.claude-plugin/marketplace.json`) holding one plugin, `ai`, whose manifest (`.claude-plugin/plugin.json`) points at `.claude/skills/` and `.claude/agents/`, so nothing moves:
+**As a plugin (local CLI, desktop and IDE sessions).** This repo is a plugin marketplace (`.claude-plugin/marketplace.json`, named `amritk`) holding one plugin, `ai`, whose manifest (`.claude-plugin/plugin.json`) points at `.claude/skills/` and `.claude/agents/`, so nothing moves:
 
 ```
 /plugin marketplace add amritk/ai
-/plugin install ai@amritk-ai
+/plugin install ai@amritk
 ```
 
 A repo can offer it to everyone who opens it by listing it in its `.claude/settings.json`:
 
 ```json
 {
-  "extraKnownMarketplaces": { "amritk-ai": { "source": { "source": "github", "repo": "amritk/ai" } } },
-  "enabledPlugins": { "ai@amritk-ai": true }
+  "extraKnownMarketplaces": { "amritk": { "source": { "source": "github", "repo": "amritk/ai" } } },
+  "enabledPlugins": { "ai@amritk": true }
 }
 ```
 
