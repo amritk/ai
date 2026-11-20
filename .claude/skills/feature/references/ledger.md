@@ -29,6 +29,7 @@ Title `Feature: <slug>`, label `feature-run`, body:
 - skipped on PRs by design: `{job}` (`if: {condition}`) · … , or "none"
 - known environment failures: {suites that fail in a worker container regardless of the change, or "none"}
 - report: {publish | file}
+- issue mode: parent #{N} · stages {stage-id} → #{n} · … (or "no" outside issue mode)
 - bounds: deadline {ISO timestamp} · no-branch 45m · no-commit 90m · re-runs 1 per check per head · check-ins 30→60→120m on no drift, capped at the shortest running silence timeout
 
 ## Acceptance

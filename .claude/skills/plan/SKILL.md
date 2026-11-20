@@ -51,6 +51,10 @@ stages:
 - Order stages, and todos within a stage, **by dependency** (earliest first).
 - A stage's `status` is derived from its todos unless set explicitly (use explicit to mark the active/cancelled stage).
 
+## Plans filed as issues
+
+In a repo that tracks plans as GitHub issues (the `plan-issues` skill), a plan may also carry `roadmap`, `spec`, `priority` and `labels` at the top level, and `issue`, `related` and `labels` on a stage. `plan-issues` documents them and writes `issue:` itself. Once a stage has an issue, the issue's open or closed state is its status, so do not keep that stage's `status:` in sync by hand. Write each stage's `## <title>` body section so it stands alone: it becomes the sub-issue's body.
+
 ## Todos — a checklist of deliverables, not the spec
 
 - **Always populate this list.** Every plan has at least one todo; break multi-file or multi-step work into one todo per independently-shippable deliverable.

@@ -184,6 +184,9 @@ and is working in parallel right now.
 7. Open a PR from your branch to {default branch}. Title: `{stage title}`.
    Body: what changed and why, the verification commands you ran with their results,
    and `Part of #{issue number}` so it links to the run.
+   {issue mode: "Then a line `Fixes #{stage issue}`, and one `Fixes #{n}` line for each
+   of {open sub-issues of the stage issue}, so the merge closes them. Keep these lines
+   if you rewrite the body."}
 
 ## Running tests without burning the session
 Every model call re-reads your whole context, so waiting is what costs you, not testing.

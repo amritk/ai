@@ -43,7 +43,9 @@ skills and nothing else.
 | `check-iterate` | Runs that as a loop — `checker` collects, `verifier` refutes, the primary agent fixes and pins each fix with a regression test — until a pass comes back clean or seven loops. |
 | `plan` | Writes plan files in the `.claude/plans/<slug>.plan.md` stages schema. |
 | `plan-execute` | Executes a plan file, runs the plan's own verification commands, drives the check loop over the result, then publishes the run through `session-report`. |
-| `feature` | Takes requirements to merged PRs on Claude Code cloud — plans the work, gives each stage its own cloud session, branch, and PR, reviews each PR with fresh-context adversarial rounds, and merges when the gate passes. Stops once, for plan acceptance. |
+| `feature` | Takes requirements to merged PRs on Claude Code cloud — plans the work, gives each stage its own cloud session, branch, and PR, reviews each PR with fresh-context adversarial rounds, and merges when the gate passes. Stops once, for plan acceptance — or, in issue mode (`/feature #N`, `/feature --next`), builds a parent issue whose sub-issues are its stages, taking the parent's `ready` label as the sign-off and closing the issues as the PRs merge. |
+| `plan-issues` | Files plan files as GitHub issues: one parent per plan, one sub-issue per open stage, existing issues reused rather than duplicated, every parent ordered under one Roadmap issue, and the issue numbers recorded back into the plans. Idempotent. |
+| `decide` | Gathers every issue labelled `needs-decision` (and, with `--backlog`, plans awaiting sign-off), asks the owner each one as a selection prompt with options and a recommendation, records the answer on the issue, and relabels it so agents can build it. `--watch` makes the session the standing place those questions arrive. |
 | `session-report` | Publishes what the session did as a linked Claude artifact: what was asked, what changed, what was verified, every finding with its verdict and fix, and what needs a human. Leaves the link on the PR when there is one. |
 | `pr-review` | Reviews one PR (or the current branch, with `--branch`) against a prompt you supply. Posts line-anchored comments, capped at a `COMMENT` review. |
 | `pr-triage` | Reads the whole open PR queue and publishes one page rating every PR Low → Critical, with a "start here" list. |
@@ -58,6 +60,7 @@ skills and nothing else.
 `perf` edits and may open a PR for a measured win. `pr-land` pushes fixes only to a
 branch you own or asked it to drive, and merges only the PRs you named — asking it is
 the approval.
+`plan-issues` writes issues and the plan files' `issue:` fields, and never closes or rewrites an existing issue. `decide` only comments and relabels, and only on an answer the owner picked.
 `feature` is the exception to all of it — it plans, commits, pushes, opens PRs, and merges
 them on its own, which is why it stops for an explicit human approval of the plan
 before it does anything.
