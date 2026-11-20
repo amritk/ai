@@ -1,7 +1,7 @@
 ---
 name: run-reconciler
 description: Read-only state collector for one /feature wake. Reads the run's tracking issue, checks every ledger row against GitHub and the worker sessions, and returns only the rows whose real state differs from the ledger, as a compact table. Never writes, comments, spawns, or decides; the lead acts on what it returns. Spawn a fresh one per wake.
-tools: mcp__github__issue_read, mcp__github__list_branches, mcp__github__list_pull_requests, mcp__github__pull_request_read, mcp__github__actions_list, mcp__github__get_check_run, mcp__Claude_Code_Remote__get_session, mcp__Claude_Code_Remote__list_triggers
+tools: mcp__github__issue_read, mcp__github__list_branches, mcp__github__list_pull_requests, mcp__github__pull_request_read, mcp__github__actions_list, mcp__github__get_check_run, mcp__Claude_Code_Remote__get_session, mcp__claude-code-remote__get_session, mcp__Claude_Code_Remote__list_triggers, mcp__claude-code-remote__list_triggers
 model: claude-sonnet-5-5
 effort: low
 color: blue

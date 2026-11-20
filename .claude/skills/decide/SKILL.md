@@ -19,9 +19,13 @@ allowed-tools:
   - mcp__github__issue_write
   - mcp__github__add_issue_comment
   - mcp__Claude_Code_Remote__create_trigger
+  - mcp__claude-code-remote__create_trigger
   - mcp__Claude_Code_Remote__list_triggers
+  - mcp__claude-code-remote__list_triggers
   - mcp__Claude_Code_Remote__update_trigger
+  - mcp__claude-code-remote__update_trigger
   - mcp__Claude_Code_Remote__delete_trigger
+  - mcp__claude-code-remote__delete_trigger
 ---
 
 # decide
