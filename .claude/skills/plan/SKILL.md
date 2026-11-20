@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Write or update implementation plans as .claude/plans/<slug>.plan.md files using the stages frontmatter schema rendered by the plan-preview extension. Use whenever asked to write, draft, produce, revise, or update a plan file — including when presenting a plan from plan mode — instead of emitting the plan as chat text or ad-hoc markdown. This is about authoring the plan *file*; it is not the Plan architect agent or the harness plan mode.
+description: Write or update implementation plans as .claude/plans/<slug>.plan.md files using the stages frontmatter schema rendered by the plan-preview extension. Use whenever asked to write, draft, produce, revise, or update a plan file — including when presenting a plan from plan mode — instead of emitting the plan as chat text or ad-hoc markdown. This is about authoring the plan *file*; it is not the Plan architect agent or the harness plan mode. In a repo that tracks plans as GitHub issues (it has an open issue labelled `roadmap`), a new plan gets a priority and is filed with `plan-issues` as the last step.
 ---
 
 # Writing plans
@@ -54,6 +54,15 @@ stages:
 ## Plans filed as issues
 
 In a repo that tracks plans as GitHub issues (the `plan-issues` skill), a plan may also carry `roadmap`, `spec`, `priority` and `labels` at the top level, and `issue`, `related` and `labels` on a stage. `plan-issues` documents them and writes `issue:` itself. Once a stage has an issue, the issue's open or closed state is its status, so do not keep that stage's `status:` in sync by hand. Write each stage's `## <title>` body section so it stands alone: it becomes the sub-issue's body.
+
+### Filing the plan: the last step
+
+In such a repo, a plan this skill writes is filed as issues before the skill hands back, so the work can be picked up at once. Skip this step when `/feature` is drafting the plan in its Phase 1: a run's plan files nothing until its sign-off, and a run that wants issues uses issue mode.
+
+1. **Does the repo track plans as issues?** Take `owner/repo` from `git remote get-url origin` and look for an open issue labelled `roadmap` (`list_issues`). If there is none, stop here: the plan stays a file.
+2. **Give it a priority.** Skip this if the plan already has one. If the user named one, or a place ("next", "before WP49", "after the docs plan"), set it against the `priority:` of the other plans in `.claude/plans/` that carry one. Otherwise put it at the end of the queue: the highest priority among those plans, plus 10. Write `priority: <n>` into the frontmatter and validate the YAML as below. Add `labels: [ready]` only if the user said agents may start it; otherwise it is backlog, and `/decide --backlog` offers it to the owner for sign-off.
+3. **File it.** Run the `plan-issues` skill on this one file (`/plan-issues .claude/plans/<slug>.plan.md`). It matches each stage against the open issues first, files the parent and its stages, places the parent under the `roadmap` issue by priority, and records every number in the plan. The same applies when this skill adds stages to a plan that is already filed (it has `issue:`): `plan-issues` files only what is new, and reopens the parent if it was closed.
+4. **Report** the parent issue, the stages it created, the open issues it matched, and where the plan sits in the queue. Then say that the plan file still has to land on the default branch through the repo's usual PR: the issues link to it there.
 
 ## Todos — a checklist of deliverables, not the spec
 
