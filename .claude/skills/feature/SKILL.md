@@ -16,20 +16,35 @@ allowed-tools:
   - SendMessage
   - Skill
   - mcp__Claude_Code_Remote__create_session
+  - mcp__claude-code-remote__create_session
   - mcp__Claude_Code_Remote__get_session
+  - mcp__claude-code-remote__get_session
   - mcp__Claude_Code_Remote__list_environments
+  - mcp__claude-code-remote__list_environments
   - mcp__Claude_Code_Remote__set_session_tags
+  - mcp__claude-code-remote__set_session_tags
   - mcp__Claude_Code_Remote__set_session_title
+  - mcp__claude-code-remote__set_session_title
   - mcp__Claude_Code_Remote__interrupt_session
+  - mcp__claude-code-remote__interrupt_session
   - mcp__Claude_Code_Remote__archive_session
+  - mcp__claude-code-remote__archive_session
   - mcp__Claude_Code_Remote__unarchive_session
+  - mcp__claude-code-remote__unarchive_session
   - mcp__Claude_Code_Remote__send_later
+  - mcp__claude-code-remote__send_later
   - mcp__Claude_Code_Remote__create_trigger
+  - mcp__claude-code-remote__create_trigger
   - mcp__Claude_Code_Remote__list_triggers
+  - mcp__claude-code-remote__list_triggers
   - mcp__Claude_Code_Remote__delete_trigger
+  - mcp__claude-code-remote__delete_trigger
   - mcp__Claude_Code_Remote__update_trigger
+  - mcp__claude-code-remote__update_trigger
   - mcp__Claude_Code_Remote__subscribe_pr_activity
+  - mcp__claude-code-remote__subscribe_pr_activity
   - mcp__Claude_Code_Remote__unsubscribe_pr_activity
+  - mcp__claude-code-remote__unsubscribe_pr_activity
   - mcp__github__issue_read
   - mcp__github__issue_write
   - mcp__github__list_issues

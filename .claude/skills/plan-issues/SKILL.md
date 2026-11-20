@@ -19,6 +19,7 @@ allowed-tools:
   - mcp__github__add_issue_comment
   - mcp__github__update_issue_comment
   - mcp__Claude_Code_Remote__get_session
+  - mcp__claude-code-remote__get_session
 ---
 
 # plan-issues
