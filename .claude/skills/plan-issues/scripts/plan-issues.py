@@ -11,7 +11,8 @@ has no token a script could use.
 
     plan-issues.py check  [plans...]
     plan-issues.py render --repo owner/repo [--ref main] [plans...]
-    plan-issues.py record <plan> [--parent N] [--stage <id>=N ...]
+    plan-issues.py record <plan> [--parent N] [--stage <id>=N ...] [--related <id>=N[,N...] ...]
+    plan-issues.py used   [plans...]
 
 With no plans named, every `.claude/plans/*.plan.md` under the current
 directory that opts in is read: it carries `stages` and a `priority` or an
@@ -26,8 +27,12 @@ is not filed.
 re-filed as closed issues.
 
 `record` edits the frontmatter as text, inserting or replacing one
-`issue: N` line, so the rest of the file -- comments, quoting, wrapping --
-stays byte for byte as it was.
+`issue: N` or `related: [...]` line, so the rest of the file -- comments,
+quoting, wrapping -- stays byte for byte as it was. `--related` adds to a
+stage's list; it never drops a number already there.
+
+`used` prints the JSON list of every issue number the plans already name
+(parents, stages and related), so a matching pass can leave those out.
 """
 
 from __future__ import annotations
@@ -265,20 +270,30 @@ def render(plan: dict, repo: str, ref: str) -> dict:
     }
 
 
-def record(path: pathlib.Path, parent: int | None, stages: dict[str, int]) -> None:
+def record(
+    path: pathlib.Path, parent: int | None, stages: dict[str, int], related: dict[str, list[int]] | None = None
+) -> None:
     head, body = split(path)
     lines = head.splitlines(keepends=True)
     if parent is not None:
         lines = set_issue(lines, None, parent, path)
     for sid, number in stages.items():
         lines = set_issue(lines, sid, number, path)
+    if related:
+        current = {s["id"]: s["related"] for s in check(path)["stages"]}
+        for sid, numbers in related.items():
+            if sid not in current:
+                raise PlanError(f"{path}: no stage `{sid}`")
+            merged = list(dict.fromkeys([*current[sid], *numbers]))
+            lines = set_key(lines, sid, "related", "[" + ", ".join(map(str, merged)) + "]", path)
     path.write_text("---\n" + "".join(lines) + "---\n" + body)
     check(path)
 
 
 def set_issue(lines: list[str], stage: str | None, number: int, path: pathlib.Path) -> list[str]:
     """Insert or replace `issue: N` at the plan's top level or in one stage."""
-    if stage is None:
+    if stage is not None:
+        return set_key(lines, stage, "issue", str(number), path)
         for i, line in enumerate(lines):
             if re.match(r"^issue:", line):
                 lines[i] = f"issue: {number}\n"
@@ -287,6 +302,11 @@ def set_issue(lines: list[str], stage: str | None, number: int, path: pathlib.Pa
             if re.match(r"^stages:", line):
                 return [*lines[:i], f"issue: {number}\n", *lines[i:]]
         raise PlanError(f"{path}: no `stages:` key to record the parent before")
+    raise AssertionError("unreachable")
+
+
+def set_key(lines: list[str], stage: str, key: str, value: str, path: pathlib.Path) -> list[str]:
+    """Insert or replace `<key>: <value>` in one stage, before its `todos:`."""
     start, indent = None, 0
     for i, line in enumerate(lines):
         m = re.match(r"^(\s*)- id:\s*(\S+)\s*$", line)
@@ -306,9 +326,9 @@ def set_issue(lines: list[str], stage: str | None, number: int, path: pathlib.Pa
         for i in range(start + 1, end)
         if len(lines[i]) - len(lines[i].lstrip(" ")) == indent and ":" in lines[i]
     }
-    line = " " * indent + f"issue: {number}\n"
-    if "issue" in keys:
-        lines[keys["issue"]] = line
+    line = " " * indent + f"{key}: {value}\n"
+    if key in keys:
+        lines[keys[key]] = line
         return lines
     at = keys.get("todos", end)
     return [*lines[:at], line, *lines[at:]]
@@ -345,6 +365,9 @@ def main() -> int:
     p_record.add_argument("plan")
     p_record.add_argument("--parent", type=int)
     p_record.add_argument("--stage", action="append", default=[], metavar="ID=N")
+    p_record.add_argument("--related", action="append", default=[], metavar="ID=N[,N...]")
+    p_used = sub.add_parser("used")
+    p_used.add_argument("plans", nargs="*")
     args = parser.parse_args()
 
     try:
@@ -355,7 +378,14 @@ def main() -> int:
                 if not n.isdigit():
                     raise PlanError(f"--stage {item}: expected <id>=<issue number>")
                 stages[sid] = int(n)
-            record(pathlib.Path(args.plan), args.parent, stages)
+            related: dict[str, list[int]] = {}
+            for item in args.related:
+                sid, _, ns = item.partition("=")
+                parts = [x.strip() for x in ns.split(",") if x.strip()]
+                if not parts or not all(x.isdigit() for x in parts):
+                    raise PlanError(f"--related {item}: expected <id>=<n>[,<n>...]")
+                related.setdefault(sid, []).extend(int(x) for x in parts)
+            record(pathlib.Path(args.plan), args.parent, stages, related)
             print(f"recorded in {args.plan}")
             return 0
         plans, failures = [], []
@@ -367,6 +397,15 @@ def main() -> int:
         if failures:
             print("\n".join(failures), file=sys.stderr)
             return 1
+        if args.cmd == "used":
+            numbers = set()
+            for plan in plans:
+                if plan["issue"]:
+                    numbers.add(plan["issue"])
+                for stage in plan["stages"]:
+                    numbers.update(n for n in [stage["issue"], *stage["related"]] if n)
+            print(json.dumps(sorted(numbers)))
+            return 0
         if args.cmd == "check":
             print(f"{len(plans)} plans OK, {sum(len(p['stages']) for p in plans)} stages")
             return 0

@@ -114,9 +114,10 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 
 | Command | What it does |
 | --- | --- |
-| `/plan-issues [plans…]` | File plans as issues, or file what is new in them; records each issue number back in the plan. Rerunning creates only what is missing. |
+| `/plan-issues [plans…]` | File plans as issues, or file what is new in them. An open issue that already is a stage's work is attached as that stage instead of a duplicate being filed, and one the stage also fixes is attached under it; records each issue number back in the plan. Rerunning creates only what is missing. |
 | `/plan-issues --dry-run` | Print what would be filed, and file nothing. |
 | `/plan-issues --no-root` | File without creating or using a `roadmap` issue. |
+| `/plan-issues --no-match` | Skip matching. By default every new stage is first matched against the repo's open issues, and an issue that is that stage's work is attached instead of a new one being filed. |
 | `/feature #N` | Build parent issue N: a session and a PR per open stage, review, merge, close the issues. A parent labelled `ready` runs without stopping for sign-off. |
 | `/feature --next` | Claim the first `ready` parent under the `roadmap` issue and build it. |
 | `/feature --next --max-runs N` | The same, unless N parents are already `in-progress` (default 2). Fit for a recurring scheduled task. |
