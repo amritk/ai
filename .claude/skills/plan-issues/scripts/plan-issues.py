@@ -322,7 +322,10 @@ def plan_paths(names: list[str]) -> list[pathlib.Path]:
         try:
             data, _ = load(p)
         except PlanError:
-            paths.append(p)  # let check report it
+            # Unparseable: report it only if it looks opted in, so a run's own
+            # broken plan does not block filing the roadmap.
+            if re.search(r"^(priority|issue):", p.read_text(), re.M):
+                paths.append(p)
             continue
         if data.get("stages") and ("priority" in data or "issue" in data):
             paths.append(p)
