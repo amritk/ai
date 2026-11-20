@@ -89,7 +89,7 @@ Every action the lead takes is guarded by a check that it has not already happen
 | re-arm a wake | no pending trigger for this run (`list_triggers`) |
 | re-run a red check | no re-run already logged for that check at that head SHA |
 | spawn acceptance | every slice merged or escalated, and no acceptance row already `running` |
-| read the acceptance verdict | a comment on the issue opening with `<!-- feature:acceptance -->` |
+| read the acceptance verdict | a comment on the issue opening with `<!-- feature:acceptance -->`, whose `author_association` is `OWNER`, `MEMBER` or `COLLABORATOR` (the acceptance session writes as the owner's account; a verdict from anyone else is ignored) |
 | notify a human | that escalation not already in the log as notified |
 
 This is what makes a duplicate event harmless and a resumed run indistinguishable from an uninterrupted one. Anchor review rounds to the **head SHA**, not just the round counter — a worker that pushed twice between wakes has changed the thing you reviewed, and a batch written against the old head is noise.
