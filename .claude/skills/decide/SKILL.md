@@ -26,7 +26,7 @@ allowed-tools:
 
 # decide
 
-Agents build what is `ready` and skip anything that waits on the owner. This skill brings everything that waits on the owner into one place, asks about each item, and records the answers where agents will read them. The labels are those of the `plan-issues` skill.
+Agents build what is `ready` and skip anything that waits on the owner. This skill brings everything that waits on the owner into one place, asks about each item, and records the answers where agents will read them. The labels are those the `pickup` skill defines.
 
 Invoke as `/decide [#issue ...] [--backlog] [--watch | --unwatch]`:
 
