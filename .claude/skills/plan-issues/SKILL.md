@@ -17,6 +17,8 @@ allowed-tools:
   - mcp__github__sub_issue_write
   - mcp__github__list_issues
   - mcp__github__add_issue_comment
+  - mcp__github__update_issue_comment
+  - mcp__Claude_Code_Remote__get_session
 ---
 
 # plan-issues
@@ -86,6 +88,25 @@ Use `<skill dir>/scripts/plan-issues.py` for everything except the GitHub calls.
 Use only the GitHub tools for writes. A label's first use creates it. Two agents that use a new label at the same moment can race, and one write fails; retry it once.
 5. **Verify.** Run `render` again. Every plan and every open stage now has an `issue`. For each parent, `issue_read get_sub_issues` lists its stages in plan order. Reorder with `sub_issue_write reprioritize` where they are out of order.
 6. **Hand back.** The plan files now carry issue numbers. Commit them under the repo's own rules (branch, PR, commit format). Report what was created, what was reused, and what was skipped and why, with links to the Roadmap issue and each parent.
+
+## Claiming, checkpoints and takeover
+
+Any session can die: a container is reclaimed, a context runs out, a run is aborted. So whoever works an issue leaves it in a state that another agent can pick up, and does that at a few fixed moments rather than on a timer, because every write costs a call and every comment notifies people.
+
+- **Claim.** Add `in-progress` to the issue, and post **one** status comment opening with `<!-- status -->`. It names the session (its link), the branch, and the next step. There is one status comment per issue. Later updates **edit** it (`update_issue_comment`) instead of adding comments.
+
+  ```markdown
+  <!-- status -->
+  **State:** claimed | building | PR open | blocked | stopped | taken over
+  **Where:** the stage (and, on a parent, which stages are done, open or running), and the todo in hand
+  **Branch:** `branch-name` @ `short sha` of the last push · **PR:** #N or none
+  **Session:** link · **Updated:** YYYY-MM-DD HH:MM UTC
+  **Next step:** one sentence a stranger could act on
+  ```
+- **Checkpoint: push, then edit the status.** Commit and push the branch when a todo is finished and builds, before a long run (a full suite, a benchmark), and before the session stops for any reason. A push to a branch with no PR runs no CI and wakes no one, so these pushes cost almost nothing. Once a PR is open, push only when there is something for CI or a reviewer to see, because each push reruns CI. Edit the status comment only when the next step changes: a todo done, blocked, the PR opened. Do not edit it for progress inside a todo. At most one edit an hour is the target.
+- **Stopping unfinished.** Push, then edit the status to say where it stopped, what is half done, and the exact next step. Then remove `in-progress`. An agent that can see its context or time running out does this first, before trying to finish.
+- **Blocked on the owner.** Edit the status, add `needs-decision`, post the decision request (`decide` skill), and remove `in-progress`.
+- **Takeover.** An issue labelled `in-progress` is stale when its status comment and its branch's last push are both more than 24 hours old, and the session it names is not working (`get_session`, where available). Any agent may then take it over. It edits the status comment to name itself and the takeover, starts from the pushed branch (never from scratch when a branch exists), and follows the status comment's next step. A parent claimed by `/feature` is taken over through its tracking issue instead (`feature` → Issue mode).
 
 ## Adding work later
 

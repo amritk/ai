@@ -19,6 +19,7 @@ Title `Feature: <slug>`, label `feature-run`, body:
 
 ```markdown
 ## Run
+- lead: {this lead's session id, rewritten by a takeover}
 - repo: {owner/repo}
 - base: {default branch} @ {base SHA}
 - plan: `feature/{slug}/plan` → `.claude/plans/{slug}.plan.md`

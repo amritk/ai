@@ -201,8 +201,10 @@ Every model call re-reads your whole context, so waiting is what costs you, not 
 - Push your branch with a WIP commit within 30 minutes of starting, even if only
   the first todo is done. The lead's only sign that your session came up is the
   branch existing; a session with no branch at 45 minutes gets checked on.
-- After that, push when you open the PR and once per review batch, nowhere in
-  between. A stop hook may complain about unpushed or untracked work while you
+- Until the PR opens, push again each time a todo is finished and builds, as its
+  own commit. A branch with no PR runs no CI and wakes no one, so these pushes
+  are cheap, and they are where a replacement worker starts if this session
+  dies. After the PR opens, push once per review batch, nowhere in between. A stop hook may complain about unpushed or untracked work while you
   hold a push for verification. Answer it in one line and end the turn; do not
   push early to quiet it. Keep fetched plan or prompt files outside the checkout
   (in $TMPDIR), never under .claude/, so they are not untracked files at all.
