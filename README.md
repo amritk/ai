@@ -126,7 +126,8 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 | `/feature --abort <slug>` | Stop a run; keep its branches and PRs. |
 | `/pickup #N` | Work one stage by hand: claim it (the `in-progress` label and you as assignee), keep its status comment current, push at checkpoints, and close it with the PR's `Fixes` line. |
 | `/pickup next` | The same, for the first buildable stage of the first `ready` parent. |
-| `/decide` | Ask the owner every `needs-decision` question, record each answer on its issue, and relabel it. |
+| `/decide` | Ask the owner every `needs-decision` question, one at a time: background in chat, then the question with its options plus **Discuss first** and **Skip for now**. Records each answer on its issue and relabels it. |
+| `/decide --batch` | Up to four questions per prompt with no discussion, for clearing simple items quickly. |
 | `/decide #N …` | Only those issues. |
 | `/decide --backlog` | Also offer each unlabelled plan for sign-off as `ready`. |
 | `/decide --watch` | Make this session the decisions session: it registers on the `roadmap` issue, agents message it when they ask, and an hourly check catches the rest. |
