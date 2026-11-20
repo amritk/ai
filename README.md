@@ -62,7 +62,7 @@ skills and nothing else.
 | --- | --- |
 | `check` | Reviews the branch's diff against main adversarially, inline when it is one shard and fanned out to read-only `checker` subagents when it is larger, then reduces the findings to a plan. |
 | `check-iterate` | Runs that as a loop — `checker` collects, `verifier` refutes, the primary agent fixes and pins each fix with a regression test — until a pass comes back clean or seven loops. |
-| `plan` | Writes plan files in the `.claude/plans/<slug>.plan.md` stages schema. |
+| `plan` | Writes plan files in the `.claude/plans/<slug>.plan.md` stages schema. In a repo with an open `roadmap` issue, it settles the plan's decisions, queue position and sign-off with you, then files it `ready` with `plan-issues`. |
 | `plan-execute` | Executes a plan file, runs the plan's own verification commands, drives the check loop over the result, then publishes the run through `session-report`. |
 | `feature` | Takes requirements to merged PRs on Claude Code cloud — plans the work, gives each stage its own cloud session, branch, and PR, reviews each PR with fresh-context adversarial rounds, and merges when the gate passes. Stops once, for plan acceptance — or, in issue mode (`/feature #N`, `/feature --next`), builds a parent issue whose sub-issues are its stages, taking the parent's `ready` label as the sign-off and closing the issues as the PRs merge. |
 | `plan-issues` | Files plan files as GitHub issues: one parent per plan, one sub-issue per open stage, existing issues reused rather than duplicated, every parent ordered under one Roadmap issue, and the issue numbers recorded back into the plans. Idempotent. |
@@ -114,6 +114,7 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 
 | Command | What it does |
 | --- | --- |
+| `/plan <what to build>` | Write a plan. Where a `roadmap` issue exists, it also settles every open decision in the plan with you, one question at a time (with Discuss first), asks where it goes in the queue and whether agents may start it, then files it. New work goes from a description to `ready` issues in one session, with no separate `/decide` pass. |
 | `/plan-issues [plans…]` | File plans as issues, or file what is new in them. An open issue that already is a stage's work is attached as that stage instead of a duplicate being filed, and one the stage also fixes is attached under it; records each issue number back in the plan. Rerunning creates only what is missing. |
 | `/plan-issues --dry-run` | Print what would be filed, and file nothing. |
 | `/plan-issues --no-root` | File without creating or using a `roadmap` issue. |
@@ -125,7 +126,8 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 | `/feature --abort <slug>` | Stop a run; keep its branches and PRs. |
 | `/pickup #N` | Work one stage by hand: claim it (the `in-progress` label and you as assignee), keep its status comment current, push at checkpoints, and close it with the PR's `Fixes` line. |
 | `/pickup next` | The same, for the first buildable stage of the first `ready` parent. |
-| `/decide` | Ask the owner every `needs-decision` question, record each answer on its issue, and relabel it. |
+| `/decide` | Ask the owner every `needs-decision` question, one at a time: background in chat, then the question with its options plus **Discuss first** and **Skip for now**. Records each answer on its issue and relabels it. |
+| `/decide --batch` | Up to four questions per prompt with no discussion, for clearing simple items quickly. |
 | `/decide #N …` | Only those issues. |
 | `/decide --backlog` | Also offer each unlabelled plan for sign-off as `ready`. |
 | `/decide --watch` | Make this session the decisions session: it registers on the `roadmap` issue, agents message it when they ask, and an hourly check catches the rest. |
