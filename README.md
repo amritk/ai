@@ -5,15 +5,36 @@ place instead of being copied between them.
 
 ## Using them
 
-Link this repo into a session alongside whatever you are actually working on.
-Claude Code loads a linked repo's `.claude/skills/`, so everything below becomes
-available as `/<skill-name>` without any install step or per-repo config.
+Three ways, depending on where the session runs.
 
-That is the whole setup — the layout here exists to be discovered:
+**As a plugin (local CLI, desktop and IDE sessions).** This repo is a plugin marketplace (`.claude-plugin/marketplace.json`) holding one plugin, `ai`, whose manifest (`.claude-plugin/plugin.json`) points at `.claude/skills/` and `.claude/agents/`, so nothing moves:
+
+```
+/plugin marketplace add amritk/ai
+/plugin install ai@amritk-ai
+```
+
+A repo can offer it to everyone who opens it by listing it in its `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": { "amritk-ai": { "source": { "source": "github", "repo": "amritk/ai" } } },
+  "enabledPlugins": { "ai@amritk-ai": true }
+}
+```
+
+Plugin skills and agents are namespaced (`/ai:feature`, `ai:checker`). Updates arrive only when you run `/plugin` → update, unless you turn on the marketplace's auto-update. Pin a `ref` or `sha` on the marketplace source to make them deliberate.
+
+**Copied into a repo (Claude Code on the web and other cloud sessions).** A cloud session loads none of the plugins a repo's settings turn on. It only loads what is committed under the repo's own `.claude/skills/` and `.claude/agents/`. A repo whose agents run in the cloud, as `feature` runs do, commits copies of the skills it uses, pinned to a commit of this repo, with a script that refreshes them and fails on a hand edit. `amritk/nish`'s `scripts/sync-skills.mjs` is one. Fix a skill here, then sync, never in the copy.
+
+**Linked into a session.** Claude Code loads a linked repo's `.claude/skills/`, so linking this repo next to the one you work on makes everything below available as `/<skill-name>`, with no install step.
+
+The layout is the same for all three:
 
 ```
 .claude/skills/<name>/SKILL.md    # one directory per skill
 .claude/agents/<name>.md          # subagents the workflow skills fan out to
+.claude-plugin/                   # the marketplace and plugin manifests
 ```
 
 ### Watch for name collisions
@@ -45,6 +66,7 @@ skills and nothing else.
 | `plan-execute` | Executes a plan file, runs the plan's own verification commands, drives the check loop over the result, then publishes the run through `session-report`. |
 | `feature` | Takes requirements to merged PRs on Claude Code cloud — plans the work, gives each stage its own cloud session, branch, and PR, reviews each PR with fresh-context adversarial rounds, and merges when the gate passes. Stops once, for plan acceptance — or, in issue mode (`/feature #N`, `/feature --next`), builds a parent issue whose sub-issues are its stages, taking the parent's `ready` label as the sign-off and closing the issues as the PRs merge. |
 | `plan-issues` | Files plan files as GitHub issues: one parent per plan, one sub-issue per open stage, existing issues reused rather than duplicated, every parent ordered under one Roadmap issue, and the issue numbers recorded back into the plans. Idempotent. |
+| `pickup` | How one agent picks up, works, hands off or takes over one issue in a repo that tracks plans as issues: the labels, which issue to take, the claim and its one status comment, when to push, `Fixes` lines, asking the owner, stopping, and the 24-hour takeover rule. `feature`, `plan-issues` and `decide` all defer to it. |
 | `decide` | Gathers every issue labelled `needs-decision` (and, with `--backlog`, plans awaiting sign-off), asks the owner each one as a selection prompt with options and a recommendation, records the answer on the issue, and relabels it so agents can build it. `--watch` makes the session the standing place those questions arrive. |
 | `session-report` | Publishes what the session did as a linked Claude artifact: what was asked, what changed, what was verified, every finding with its verdict and fix, and what needs a human. Leaves the link on the PR when there is one. |
 | `pr-review` | Reviews one PR (or the current branch, with `--branch`) against a prompt you supply. Posts line-anchored comments, capped at a `COMMENT` review. |

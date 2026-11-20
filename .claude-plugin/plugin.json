@@ -1,0 +1,17 @@
+{
+  "name": "ai",
+  "description": "Shared Claude Code skills and agents from amritk/ai.",
+  "author": {
+    "name": "amritk"
+  },
+  "repository": "https://github.com/amritk/ai",
+  "skills": [
+    "./.claude/skills/"
+  ],
+  "agents": [
+    "./.claude/agents/checker.md",
+    "./.claude/agents/pr-adversary.md",
+    "./.claude/agents/run-reconciler.md",
+    "./.claude/agents/verifier.md"
+  ]
+}

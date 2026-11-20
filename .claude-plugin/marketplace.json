@@ -1,0 +1,14 @@
+{
+  "name": "amritk-ai",
+  "owner": { "name": "amritk" },
+  "metadata": {
+    "description": "Shared Claude Code skills and agents: planning, plans filed as GitHub issues, autonomous feature runs, adversarial review, and the owner's decisions."
+  },
+  "plugins": [
+    {
+      "name": "ai",
+      "source": "./",
+      "description": "Workflow skills (feature, plan, plan-issues, pickup, decide, check, check-iterate, pr-land, pr-review, pr-triage, debug, perf, qa, session-report, async-daily), convention skills, and the checker, verifier, pr-adversary and run-reconciler agents."
+    }
+  ]
+}
