@@ -122,7 +122,7 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 | `/feature --next --max-runs N` | The same, unless N parents are already `in-progress` (default 2). Fit for a recurring scheduled task. |
 | `/feature --status <slug>` | Report a run from its tracking issue; change nothing. |
 | `/feature --abort <slug>` | Stop a run; keep its branches and PRs. |
-| `/pickup #N` | Work one stage by hand: claim it, keep its status comment current, push at checkpoints, and close it with the PR's `Fixes` line. |
+| `/pickup #N` | Work one stage by hand: claim it (the `in-progress` label and you as assignee), keep its status comment current, push at checkpoints, and close it with the PR's `Fixes` line. |
 | `/pickup next` | The same, for the first buildable stage of the first `ready` parent. |
 | `/decide` | Ask the owner every `needs-decision` question, record each answer on its issue, and relabel it. |
 | `/decide #N …` | Only those issues. |
