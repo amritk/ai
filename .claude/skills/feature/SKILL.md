@@ -45,6 +45,8 @@ allowed-tools:
   - mcp__claude-code-remote__subscribe_pr_activity
   - mcp__Claude_Code_Remote__unsubscribe_pr_activity
   - mcp__claude-code-remote__unsubscribe_pr_activity
+  - mcp__Claude_Code_Remote__send_message
+  - mcp__claude-code-remote__send_message
   - mcp__github__issue_read
   - mcp__github__issue_write
   - mcp__github__list_issues
@@ -119,6 +121,8 @@ A repo that tracks work as issues (the `plan-issues` skill files them) gives thi
 4. **The ledger** records `parent: #N` and the stage → issue map in its `## Run` block (`references/ledger.md`). On the parent, post **one** `<!-- status -->` comment that links the tracking issue and names the lead session. Edit that comment in place, never add another, and only when a stage merges or escalates and at close-out. Wakes that change nothing do not touch it. This is the claim and checkpoint protocol the `pickup` skill defines for any agent, so an agent picking up the parent later knows where to look.
 5. **Spawning** a stage adds `in-progress` to its sub-issue, and the PR's `Fixes` line links the stage to its work. A worker posts nothing on the issue. The lead records the stage's state in the ledger, and the branch it pushes at each finished todo is the checkpoint a replacement starts from. The worker's PR body carries `Fixes #<stage issue>` and a `Fixes` line for each open sub-issue of it (`references/fan-out.md`, step 7), so the merge closes them.
 6. **Close-out** (Phase 8.5), in issue mode: after every merge, confirm GitHub closed each `Fixes` issue, and close any it did not (`state_reason: completed`) — a squash merge drops the keyword when the PR body is rewritten. An escalated stage's sub-issue loses `in-progress` and gains `needs-decision`, with the escalation reason as its decision request. Then the parent: every sub-issue closed → close it `completed` and drop `in-progress` and `ready`; otherwise drop `in-progress`, and drop `ready` too when no open sub-issue is left that an agent may build. The next-step prompt (Phase 8.2) is `/feature #<parent>` when stages remain, or `/feature --next`. Under `--next` nobody is watching, so skip the selection prompt (Phase 8.9): post the action items on the parent and the tracking issue, give each one that needs the owner a `needs-decision` label and a decision request on the issue it concerns, and end — `/decide` asks the owner.
+
+**Whenever this skill labels an issue `needs-decision`**, in step 3, step 6 or an unattended close-out, it posts the decision request and messages the decisions session as `decide` → "Asking for a decision" says, in one message per wake that lists every issue it labelled. Only the lead sends it; workers never label issues.
 
 New work on a finished plan reopens its parent: add the stage to the plan file and run `plan-issues`, which creates the sub-issue and reopens the parent. A recurring scheduled task that starts a fresh session with `/feature --next` keeps the roadmap moving with no one at the keyboard; `--max-runs` bounds it.
 
