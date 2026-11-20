@@ -1,6 +1,7 @@
 ---
 name: plan
-description: Write or update implementation plans as .claude/plans/<slug>.plan.md files using the stages frontmatter schema rendered by the plan-preview extension. Use whenever asked to write, draft, produce, revise, or update a plan file — including when presenting a plan from plan mode — instead of emitting the plan as chat text or ad-hoc markdown. This is about authoring the plan *file*; it is not the Plan architect agent or the harness plan mode. In a repo that tracks plans as GitHub issues (it has an open issue labelled `roadmap`), a new plan has its open decisions, queue position and sign-off settled with the user, then is filed with `plan-issues`, `ready` for agents, as the last step.
+description: Write or update implementation plans as .claude/plans/<slug>.plan.md files using the stages frontmatter schema rendered by the plan-preview extension. Use whenever asked to write, draft, produce, revise, or update a plan file — including when presenting a plan from plan mode — instead of emitting the plan as chat text or ad-hoc markdown. This is about authoring the plan *file*; it is not the Plan architect agent or the harness plan mode. In a repo that tracks plans as GitHub issues (it has an open issue labelled `roadmap`), a new plan has its open decisions, queue position and sign-off settled with the user, then is filed with `plan-issues`, `ready` for agents, as the last step. Every plan starts by researching the request in the repo; with `--explore`, it also narrows it down with the user, one question at a time, before drafting.
+argument-hint: "<what to build> [--explore]"
 ---
 
 # Writing plans
@@ -10,6 +11,33 @@ Write plans as plan files: `.claude/plans/<slug>.plan.md` — YAML frontmatter, 
 A plan is a **checklist of deliverables in the frontmatter** plus **narrative detail in the body**. Small work is a flat `todos` list; larger work is broken into **stages**, each a mini-plan with its own goal, todos, and exit criteria.
 
 A plan without a populated `todos` list (flat, or inside every stage) is incomplete — never hand back a plan with an empty or missing todos array.
+
+## Invocation
+
+Invoke as `/plan <what to build> [--explore]`.
+
+Every plan starts with **research** (below), with or without the flag. Then:
+
+- **Default: plan what was asked.** Take the request as the spec and ask nothing before drafting. Where the request leaves something open, take the reading the research and the request best support and say so in `## Approach`. A choice that only the user can make, and that changes the stages, becomes a `### Decision needed` in its stage. The filing step asks about those in a repo that tracks plans as issues.
+- **`--explore`: narrow it down with the user first.** Use this when the request is a direction rather than a spec. It adds the back-and-forth in **Explore mode** below before the plan is drafted, and a review of the draft after.
+
+Ignore `--explore` when no one is there to answer, as in `/feature` issue mode. Plan from the request and say that the flag was ignored.
+
+## Research first
+
+Before drafting any plan, read what bears on the request: the code it touches, the plans in `.claude/plans/` (one may already cover it, or the new one may depend on or collide with it), related open issues, and recent history in the area. For broad reading, spawn an `Explore` agent with `model: "sonnet"` and keep its conclusions, not the files. Scale it to the request: a one-file change needs that file and its callers, not a survey. What the research settles goes into the plan as fact, and a question the repo answers is never put to the user.
+
+## Explore mode
+
+The aim is a plan the user recognises as what they meant, reached with as few questions as possible. Every question costs the user's attention, so the research answers what it can. After **Research first**:
+
+1. **Say what you found.** In a few lines of chat: what exists now, what the request seems to mean against it, and the two or three ways it could reasonably go. This is where the user corrects a wrong premise cheaply.
+2. **Ask only what changes the plan.** A question qualifies when its answer changes the stages, the scope or the acceptance criteria. Ask about intent, scope and priorities, which only the user knows; leave the how to the draft. Ask with `AskUserQuestion`, one question at a time, as `decide` does (`decide` → Procedure, step 4): set it up in a line or two of chat, the recommended option first, plus **Discuss first** and **Skip for now**. Each question states the assumption the draft will take if it is skipped. When an answer opens new ground, research it before the next question. Most requests need three questions or fewer. Past about six, stop asking and draft on the assumptions.
+3. **Confirm the understanding.** Restate it in chat: the goal, what is in scope, what is out of scope, and how done will be judged. Then ask once with `AskUserQuestion`: **Looks right (Recommended)** or **Change something**. A change goes back to step 2 for that point only. The confirmed statement becomes the plan's `## Context`, `## Out of scope` and `## Verification`.
+4. **Draft**, as the rest of this skill says.
+5. **Review the draft with fresh eyes.** Spawn one `general-purpose` agent with `model: "sonnet"`, give it the plan file and the confirmed understanding (not your reasoning), and ask it to find what would make the plan fail: a missing stage, a todo with no done-signal, a wrong dependency order, a file the work needs that no todo names, verification that cannot be run, anything that contradicts the confirmed understanding. Fix what has a factual answer yourself. What only the user can decide becomes a `### Decision needed` for the filing step, or, in a repo that does not file plans, one more question here.
+
+If the user dismisses a prompt, stop asking: draft on the assumptions so far, and list them in `## Approach`. The filing step that follows does not ask again about anything settled here.
 
 ## Frontmatter — flat (small plans)
 

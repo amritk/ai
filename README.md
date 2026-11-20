@@ -62,7 +62,7 @@ skills and nothing else.
 | --- | --- |
 | `check` | Reviews the branch's diff against main adversarially, inline when it is one shard and fanned out to read-only `checker` subagents when it is larger, then reduces the findings to a plan. |
 | `check-iterate` | Runs that as a loop — `checker` collects, `verifier` refutes, the primary agent fixes and pins each fix with a regression test — until a pass comes back clean or seven loops. |
-| `plan` | Writes plan files in the `.claude/plans/<slug>.plan.md` stages schema. In a repo with an open `roadmap` issue, it settles the plan's decisions, queue position and sign-off with you, then files it `ready` with `plan-issues`. |
+| `plan` | Writes plan files in the `.claude/plans/<slug>.plan.md` stages schema, researching the request in the repo first; with `--explore`, it also narrows the request down with you before drafting. In a repo with an open `roadmap` issue, it settles the plan's decisions, queue position and sign-off with you, then files it `ready` with `plan-issues`. |
 | `plan-execute` | Executes a plan file, runs the plan's own verification commands, drives the check loop over the result, then publishes the run through `session-report`. |
 | `feature` | Takes requirements to merged PRs on Claude Code cloud — plans the work, gives each stage its own cloud session, branch, and PR, reviews each PR with fresh-context adversarial rounds, and merges when the gate passes. Stops once, for plan acceptance — or, in issue mode (`/feature #N`, `/feature --next`), builds a parent issue whose sub-issues are its stages, taking the parent's `ready` label as the sign-off and closing the issues as the PRs merge. |
 | `plan-issues` | Files plan files as GitHub issues: one parent per plan, one sub-issue per open stage, existing issues reused rather than duplicated, every parent ordered under one Roadmap issue, and the issue numbers recorded back into the plans. Idempotent. |
@@ -114,13 +114,14 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 
 | Command | What it does |
 | --- | --- |
-| `/plan <what to build>` | Write a plan. Where a `roadmap` issue exists, it also settles every open decision in the plan with you, one question at a time (with Discuss first), asks where it goes in the queue and whether agents may start it, then files it. New work goes from a description to `ready` issues in one session, with no separate `/decide` pass. |
+| `/plan <what to build>` | Research the request in the repo, then write a plan from it as given. Where a `roadmap` issue exists, it also settles every open decision in the plan with you, one question at a time (with Discuss first), asks where it goes in the queue and whether agents may start it, then files it. New work goes from a description to `ready` issues in one session, with no separate `/decide` pass. |
+| `/plan <what to build> --explore` | The same, but after the research it narrows the request down with you: what it found, a few questions that change the plan (each skippable), a restatement of the goal and scope to confirm, then a fresh-context review of the draft. For a direction rather than a spec. |
 | `/plan-issues [plans…]` | File plans as issues, or file what is new in them. An open issue that already is a stage's work is attached as that stage instead of a duplicate being filed, and one the stage also fixes is attached under it; records each issue number back in the plan. Rerunning creates only what is missing. |
 | `/plan-issues --dry-run` | Print what would be filed, and file nothing. |
 | `/plan-issues --no-root` | File without creating or using a `roadmap` issue. |
 | `/plan-issues --no-match` | Skip matching. By default every new stage is first matched against the repo's open issues, and an issue that is that stage's work is attached instead of a new one being filed. |
 | `/feature #N` | Build parent issue N: a session and a PR per open stage, review, merge, close the issues. A parent labelled `ready` runs without stopping for sign-off. |
-| `/feature --next` | Claim the first `ready` parent under the `roadmap` issue and build it. |
+| `/feature --next` | Claim the first `ready` parent under the `roadmap` issue and build it. First archives the lead sessions of earlier `--next` runs that finished cleanly (tracking issue closed, session idle), once each; escalated runs keep theirs. |
 | `/feature --next --max-runs N` | The same, unless N parents are already `in-progress` (default 2). Fit for a recurring scheduled task. |
 | `/feature --status <slug>` | Report a run from its tracking issue; change nothing. |
 | `/feature --abort <slug>` | Stop a run; keep its branches and PRs. |
