@@ -1,7 +1,7 @@
 ---
 name: feature
-description: Drive work from requirements to merged pull requests autonomously on Claude Code cloud — plan it, fan the plan's stages out to one cloud session per PR, review each PR with fresh-context adversarial rounds, merge once the gate passes, and check the merged result against the acceptance criteria before calling it done. Use when asked to "build this feature", "ship this", "run /feature", "build and merge this autonomously", or to take an accepted plan all the way to main without supervision. Spawns sibling cloud sessions and merges PRs, so it always stops for plan acceptance first.
-argument-hint: "[requirements | plan slug] [--dry-run] [--max-slices N] [--max-rounds N] [--deadline <duration>] [--no-merge] [--no-qa] [--no-report] [--status <slug>] [--abort <slug>]"
+description: Drive work from requirements to merged pull requests autonomously on Claude Code cloud — plan it, fan the plan's stages out to one cloud session per PR, review each PR with fresh-context adversarial rounds, merge once the gate passes, and check the merged result against the acceptance criteria before calling it done. Use when asked to "build this feature", "ship this", "run /feature", "build and merge this autonomously", to take an accepted plan all the way to main without supervision, or to build a GitHub parent issue whose sub-issues are its stages ("/feature #123", "/feature --next" to claim the next ready plan from the Roadmap issue). Spawns sibling cloud sessions and merges PRs, so it always stops for plan acceptance first.
+argument-hint: "[requirements | plan slug | #issue | --next] [--dry-run] [--max-slices N] [--max-rounds N] [--deadline <duration>] [--no-merge] [--no-qa] [--no-report] [--status <slug>] [--abort <slug>]"
 allowed-tools:
   - Read
   - Write
@@ -32,7 +32,10 @@ allowed-tools:
   - mcp__Claude_Code_Remote__unsubscribe_pr_activity
   - mcp__github__issue_read
   - mcp__github__issue_write
+  - mcp__github__list_issues
+  - mcp__github__sub_issue_write
   - mcp__github__add_issue_comment
+  - mcp__github__update_issue_comment
   - mcp__github__list_pull_requests
   - mcp__github__pull_request_read
   - mcp__github__pull_request_review_write
@@ -70,7 +73,9 @@ Invoke with `/feature [requirements | plan slug] [flags]`.
 
 **Arguments** (from `$ARGUMENTS`):
 
-- First non-flag token: either a plan slug/path (`.claude/plans/<slug>.plan.md`) to execute, or free-text requirements to plan from. Free text means Phase 1 runs; a slug means it is skipped.
+- First non-flag token: a plan slug/path (`.claude/plans/<slug>.plan.md`) to execute, a parent issue (`#123` or its URL) to build in **issue mode**, or free-text requirements to plan from. Free text means Phase 1 runs; a slug means it is skipped; an issue runs Phase 1 in issue mode (see **Issue mode**).
+- `--next`: claim the next ready parent issue from the Roadmap issue and run it in issue mode. With nothing ready, report what is waiting and stop.
+- `--max-runs N`: with `--next`, the most parent issues `in-progress` at once across the repo (default **2**). At the cap, `--next` reports and stops without claiming.
 - `--dry-run`: plan, slice, and print the fan-out table — spawn nothing, open nothing, merge nothing.
 - `--max-slices N`: concurrent cloud sessions (default **4**).
 - `--max-rounds N`: adversarial review rounds per PR (default **6**). Only blocking findings open a round (`references/review-loop.md`), so a PR that is still finding blocking problems after six is one a human should look at.
@@ -86,6 +91,21 @@ Invoke with `/feature [requirements | plan slug] [flags]`.
 - **Cloud, not a laptop.** Every worker is a separate session with its own container and its own fresh clone. There is no shared filesystem and no worktree; the lead cannot see a worker's files and a worker cannot see the lead's. Everything that has to cross that boundary crosses through **git and GitHub** — see `references/ledger.md`.
 - **The lead does not write code.** It plans, spawns, reviews, merges, and reports. If the lead finds itself editing a source file, the slicing was wrong — respawn the slice instead.
 - **Autonomous merge is the default outcome, not a licence.** The only human gate is plan acceptance in Phase 1. Everything after it must be gated by machine-checkable facts, which is what `references/merge-gate.md` exists to enumerate.
+
+---
+
+## Issue mode
+
+A repo that tracks work as issues (the `plan-issues` skill files them) gives this skill its stages ready-made: a **parent issue** labelled `plan` names its plan file in a `<!-- plan: <path> -->` marker, and its **sub-issues** are the stages, in merge order. Issue mode builds such a parent. The labels mean what `plan-issues` says they mean: `ready`, `needs-decision`, `deferred`, `in-progress`.
+
+1. **Claim.** With `--next`: count open parents labelled `in-progress` (`list_issues`); at `--max-runs`, report and stop. Otherwise read the open issue labelled `roadmap` and walk its sub-issues in order; the first open one labelled `ready` and not `in-progress`, `needs-decision` or `deferred` is the parent. Nothing qualifies → report how many parents and stages are `needs-decision` (they are `/decide`'s) and stop. With `#N`: the parent is N; if it is not labelled `ready`, run Phase 1 as a normal sign-off instead of skipping it. Add `in-progress` to the parent (`issue_write update` with the union of its labels), then re-read it. If another run's `Feature:` tracking issue already links it, check whether that run is alive. It is **stale** when its ledger's last log line is more than 24 hours old and its lead session (`lead:` in the ledger) is not `working`. A live run: remove nothing, switch to `--status`, and stop. A stale run: take it over. Log `taken over by <this session>` in its ledger, put this session's id on its `lead:` line, and continue that run from Phase 4. The ledger, the branches and the PRs carry everything; never start the stages over.
+2. **The stages.** `issue_read get_sub_issues` on the parent. The run's stages are the **open** sub-issues not labelled `needs-decision`, `deferred` or `in-progress`, in sub-issue order; each maps to a plan stage through its `<!-- plan-stage: <file>#<id> -->` marker (in the body, or in a comment for a reused issue). Read each one's comments: an owner's answer recorded by `/decide` opens with `<!-- decision -->` and binds the plan. A stage's own sub-issues are issues its PR also resolves. The slug is the plan file's slug.
+3. **Phase 1, without the stop.** The parent's `ready` label is the human sign-off, given before the run. Refine the plan file as Phase 1 says (Owns, verification commands, pre-flight, `Model:` lines, acceptance criteria), fold every recorded decision into it, and post the refined stage table and criteria as one comment on the parent. Then go straight to Phase 2. Stop only when refining **changes what was signed off** — a stage added, dropped, merged or split, or a goal changed: post the change on the parent, swap `ready` for `needs-decision` with a decision request (`decide` skill → "Asking for a decision"), remove `in-progress`, and end. A single stage that cannot be built without an answer gets that label and request itself and is left out of the run; the rest go ahead. The two questions sign-off would have asked take their defaults, because no one is there to answer: merge autonomously unless Phase 0.2 found a required human review (then `--no-merge`), and hand the report over as a file, not a published artifact. A Phase 0 precondition that fails is posted on the parent, `in-progress` comes off, and the run ends.
+4. **The ledger** records `parent: #N` and the stage → issue map in its `## Run` block (`references/ledger.md`). On the parent, post **one** `<!-- status -->` comment that links the tracking issue and names the lead session. Edit that comment in place, never add another, and only when a stage merges or escalates and at close-out. Wakes that change nothing do not touch it. This is the same claim and checkpoint protocol `plan-issues` defines for any agent, so an agent picking up the parent later knows where to look.
+5. **Spawning** a stage adds `in-progress` to its sub-issue, and the PR's `Fixes` line links the stage to its work. A worker posts nothing on the issue. The lead records the stage's state in the ledger, and the branch it pushes at each finished todo is the checkpoint a replacement starts from. The worker's PR body carries `Fixes #<stage issue>` and a `Fixes` line for each open sub-issue of it (`references/fan-out.md`, step 7), so the merge closes them.
+6. **Close-out** (Phase 8.5), in issue mode: after every merge, confirm GitHub closed each `Fixes` issue, and close any it did not (`state_reason: completed`) — a squash merge drops the keyword when the PR body is rewritten. An escalated stage's sub-issue loses `in-progress` and gains `needs-decision`, with the escalation reason as its decision request. Then the parent: every sub-issue closed → close it `completed` and drop `in-progress` and `ready`; otherwise drop `in-progress`, and drop `ready` too when no open sub-issue is left that an agent may build. The next-step prompt (Phase 8.2) is `/feature #<parent>` when stages remain, or `/feature --next`. Under `--next` nobody is watching, so skip the selection prompt (Phase 8.9): post the action items on the parent and the tracking issue, give each one that needs the owner a `needs-decision` label and a decision request on the issue it concerns, and end — `/decide` asks the owner.
+
+New work on a finished plan reopens its parent: add the stage to the plan file and run `plan-issues`, which creates the sub-issue and reopens the parent. A recurring scheduled task that starts a fresh session with `/feature --next` keeps the roadmap moving with no one at the keyboard; `--max-runs` bounds it.
 
 ---
 
@@ -105,7 +125,7 @@ Check all of these before touching anything. Any failure stops the run with the 
    - **Known environment failures**: run the test command once on the base SHA in this container and record what fails there regardless of any change (a missing cross-compiler, a platform-only suite). Workers are told not to investigate these; without the list, each one rediscovers them.
 5. **Environment and permissions.** `list_environments` to resolve the environment workers inherit. Note the lead's own permission mode: **workers cannot be more permissive than the lead**, so if the lead is running in a mode that prompts, workers will stall unattended. If the lead cannot pre-approve the worker toolset, stop and say which permission the run needs.
 6. **What the workers inherit.** A worker created without an explicit `environment_id` inherits the lead's environment, and with it the same linked repos — so the skills available here are normally available there too. Confirm which of `check-iterate`, `simplify`, `debug`, and the repo's convention skills the workers will actually have, and render the worker brief accordingly: a brief that tells a worker to run a slash command it does not have wastes a round. The fallbacks are in `references/fan-out.md`.
-7. **No run already in flight.** Search for an open tracking issue for this slug (`Feature: <slug>`, label `feature-run`). If one exists, switch to `--status` behaviour and report instead of starting a duplicate run.
+7. **No run already in flight.** Search for an open tracking issue for this slug (`Feature: <slug>`, label `feature-run`). If one exists, switch to `--status` behaviour and report instead of starting a duplicate run. In issue mode the claim (Issue mode step 1) has already guarded the parent.
 8. **The bounds, as numbers.** Record the run deadline (now + `--deadline`), the worker silence timeouts, and the re-run allowance for a red check — the values are in `references/fan-out.md` and Phase 4. They go in the ledger because they are decisions, and a lead that re-decides "long enough" or "probably a flake" on each wake is not running the same policy twice.
 9. **How this run gets accepted.** Establish now how the merged result will be exercised (Phase 7): whether `/qa` is available to a spawned session, whether the feature has a surface a browser can drive, and what URL or command brings the app up. If nothing can exercise it, the run is static-acceptance-only — say so here, not in the closing report.
 
@@ -113,7 +133,7 @@ Check all of these before touching anything. Any failure stops the run with the 
 
 ## Phase 1: Plan, and stop for sign-off
 
-Skip if a plan slug was given and its file already exists.
+Skip if a plan slug was given and its file already exists. In issue mode, run the refinement and skip the stop (Issue mode step 3).
 
 1. Draft the plan with the **`plan` skill**, into `.claude/plans/<slug>.plan.md`. Use the **staged** frontmatter schema — not the flat `todos` form. This is not cosmetic: **one stage = one worker = one branch = one PR**, so the stage boundaries *are* the PR boundaries.
 2. Slice for parallelism and against conflict, per `references/fan-out.md`. Every stage needs a `goal`, a `verification` line that is a runnable command, and an `Owns:` line in its body section naming the file globs that stage may touch. Two stages that can run at once must have disjoint `Owns` sets. A stage that is purely mechanical may also carry a `Model: sonnet` line, which runs its worker on Sonnet instead of the lead's model (`references/fan-out.md` says which stages qualify). Leave it off when in doubt; the human sees it at sign-off.
