@@ -72,3 +72,5 @@ With several PRs, land them one at a time in the order given (or dependency orde
   Fixed on the way: {one line each, or "nothing"}
   Re-runs: {check @ sha, or "none"}
 ```
+
+When every PR merged and someone is there to answer, ask once with `AskUserQuestion` whether to archive this session: **Archive this session** or **Keep it (Recommended)** (keep it so you can ask follow-ups). On Archive, print the report first, then call `archive_session` on this session (`get_session` with no id gives its id) as the last action, because it ends the conversation. When no one is there, as in a handoff from `/feature`, skip the question and keep the session.

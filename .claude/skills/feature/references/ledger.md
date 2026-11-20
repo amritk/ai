@@ -23,7 +23,7 @@ Title `Feature: <slug>`, label `feature-run`, body:
 - repo: {owner/repo}
 - base: {default branch} @ {base SHA}
 - plan: `feature/{slug}/plan` → `.claude/plans/{slug}.plan.md`
-- flags: max-slices {N}, max-rounds {N}, {--no-merge if set}
+- flags: max-slices {N}, max-rounds {N}, {--no-merge if set}, {--next if set}
 - verification: test `{cmd}` · coverage `{cmd}` · lint `{cmd}` · types `{cmd}`
 - required checks: {every check name that must conclude success at a PR's head, e.g. `test (shard 1..8)`, `lint`, `nish-cmp`}
 - ci → local: `{job}` → `{cmd}` · … 

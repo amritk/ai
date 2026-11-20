@@ -121,7 +121,7 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 | `/plan-issues --no-root` | File without creating or using a `roadmap` issue. |
 | `/plan-issues --no-match` | Skip matching. By default every new stage is first matched against the repo's open issues, and an issue that is that stage's work is attached instead of a new one being filed. |
 | `/feature #N` | Build parent issue N: a session and a PR per open stage, review, merge, close the issues. A parent labelled `ready` runs without stopping for sign-off. |
-| `/feature --next` | Claim the first `ready` parent under the `roadmap` issue and build it. |
+| `/feature --next` | Claim the first `ready` parent under the `roadmap` issue and build it. First archives the lead sessions of earlier `--next` runs that finished cleanly (tracking issue closed, session idle); escalated runs keep theirs. |
 | `/feature --next --max-runs N` | The same, unless N parents are already `in-progress` (default 2). Fit for a recurring scheduled task. |
 | `/feature --status <slug>` | Report a run from its tracking issue; change nothing. |
 | `/feature --abort <slug>` | Stop a run; keep its branches and PRs. |

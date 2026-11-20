@@ -25,7 +25,7 @@ An example, for a lint job failing on a run's PR:
 
 Write it from what the run already knows: the ledger, the review findings, the escalation reason. Never write "see the PR". If the lead does not know the cause well enough to write the question, it cannot offer a fix either, so the item stays in the printed list.
 
-**Housekeeping** can share one `multiSelect` question, "Which of these should I do now?": deleting leftover branches, editing comments the run posted, archiving a session that refused to archive. These are items with only one way forward and nothing to weigh. Each option's description still names exactly what will be touched (the branch names, the comment links). An unpicked option means "leave it".
+**Housekeeping** can share one `multiSelect` question, "Which of these should I do now?": deleting leftover branches, editing comments the run posted, archiving a session that refused to archive, and **Archive this session** (the lead itself), offered when every slice merged and nothing escalated. Archiving the lead ends the conversation, so do that pick last, after `The End` has been printed; everything the run knows is already on the tracking issue. These are items with only one way forward and nothing to weigh. Each option's description still names exactly what will be touched (the branch names, the comment links). An unpicked option means "leave it".
 
 **The next-step run** always gets its own question (see below).
 
