@@ -67,7 +67,7 @@ skills and nothing else.
 | `feature` | Takes requirements to merged PRs on Claude Code cloud — plans the work, gives each stage its own cloud session, branch, and PR, reviews each PR with fresh-context adversarial rounds, and merges when the gate passes. Stops once, for plan acceptance — or, in issue mode (`/feature #N`, `/feature --next`), builds a parent issue whose sub-issues are its stages, taking the parent's `ready` label as the sign-off and closing the issues as the PRs merge. |
 | `plan-issues` | Files plan files as GitHub issues: one parent per plan, one sub-issue per open stage, existing issues reused rather than duplicated, every parent ordered under one Roadmap issue, and the issue numbers recorded back into the plans. Idempotent. |
 | `pickup` | How one agent picks up, works, hands off or takes over one issue in a repo that tracks plans as issues: the labels, which issue to take, the claim and its one status comment, when to push, `Fixes` lines, asking the owner, stopping, and the 24-hour takeover rule. `feature`, `plan-issues` and `decide` all defer to it. |
-| `decide` | Gathers every issue labelled `needs-decision` (and, with `--backlog`, plans awaiting sign-off), asks the owner each one as a selection prompt with options and a recommendation, records the answer on the issue, and relabels it so agents can build it. `--watch` makes the session the standing place those questions arrive. |
+| `decide` | Gathers every issue labelled `needs-decision` (and, with `--backlog`, plans awaiting sign-off), asks the owner each one as a selection prompt with options and a recommendation, records the answer on the issue, and relabels it so agents can build it. `--watch` makes the session the standing place those questions arrive: it registers itself on the Roadmap issue, agents message it the moment they ask, and an hourly check catches anything a message missed. |
 | `session-report` | Publishes what the session did as a linked Claude artifact: what was asked, what changed, what was verified, every finding with its verdict and fix, and what needs a human. Leaves the link on the PR when there is one. |
 | `pr-review` | Reviews one PR (or the current branch, with `--branch`) against a prompt you supply. Posts line-anchored comments, capped at a `COMMENT` review. |
 | `pr-triage` | Reads the whole open PR queue and publishes one page rating every PR Low → Critical, with a "start here" list. |
@@ -107,6 +107,31 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 | `comments` | Why-not-what comments, JSDoc, and the global-CSS exception. |
 | `vue-components` | Composition API structure, typed props and emits, Tailwind, accessibility. |
 | `openapi-glossary` | Consistent OpenAPI terminology. |
+
+## Working from issues
+
+`plan-issues`, `feature`, `pickup` and `decide` together run a roadmap kept as GitHub issues. Each plan file in `.claude/plans/` is a parent issue labelled `plan`, and each of its stages is a sub-issue, one PR each. Every parent sits under one issue labelled `roadmap`, whose sub-issue order is the order work is picked up in. The plan file holds the spec, and the issues hold the state.
+
+| Command | What it does |
+| --- | --- |
+| `/plan-issues [plans…]` | File plans as issues, or file what is new in them. An open issue that already is a stage's work is attached as that stage instead of a duplicate being filed, and one the stage also fixes is attached under it; records each issue number back in the plan. Rerunning creates only what is missing. |
+| `/plan-issues --dry-run` | Print what would be filed, and file nothing. |
+| `/plan-issues --no-root` | File without creating or using a `roadmap` issue. |
+| `/plan-issues --no-match` | Skip matching. By default every new stage is first matched against the repo's open issues, and an issue that is that stage's work is attached instead of a new one being filed. |
+| `/feature #N` | Build parent issue N: a session and a PR per open stage, review, merge, close the issues. A parent labelled `ready` runs without stopping for sign-off. |
+| `/feature --next` | Claim the first `ready` parent under the `roadmap` issue and build it. |
+| `/feature --next --max-runs N` | The same, unless N parents are already `in-progress` (default 2). Fit for a recurring scheduled task. |
+| `/feature --status <slug>` | Report a run from its tracking issue; change nothing. |
+| `/feature --abort <slug>` | Stop a run; keep its branches and PRs. |
+| `/pickup #N` | Work one stage by hand: claim it (the `in-progress` label and you as assignee), keep its status comment current, push at checkpoints, and close it with the PR's `Fixes` line. |
+| `/pickup next` | The same, for the first buildable stage of the first `ready` parent. |
+| `/decide` | Ask the owner every `needs-decision` question, record each answer on its issue, and relabel it. |
+| `/decide #N …` | Only those issues. |
+| `/decide --backlog` | Also offer each unlabelled plan for sign-off as `ready`. |
+| `/decide --watch` | Make this session the decisions session: it registers on the `roadmap` issue, agents message it when they ask, and an hourly check catches the rest. |
+| `/decide --unwatch` | Stop being the decisions session. |
+
+The labels: `ready` (signed off, so agents may build it), `needs-decision` (waits on the owner), `deferred` (wanted, not scheduled), `in-progress` (claimed), `plan` (a parent issue) and `roadmap` (the ordering issue). [`pickup`](.claude/skills/pickup/SKILL.md) defines them, along with the claim, checkpoint and 24-hour takeover rules every agent follows.
 
 ## Evals
 

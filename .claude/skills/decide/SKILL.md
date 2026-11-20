@@ -18,6 +18,9 @@ allowed-tools:
   - mcp__github__issue_read
   - mcp__github__issue_write
   - mcp__github__add_issue_comment
+  - mcp__github__update_issue_comment
+  - mcp__Claude_Code_Remote__get_session
+  - mcp__claude-code-remote__get_session
   - mcp__Claude_Code_Remote__create_trigger
   - mcp__claude-code-remote__create_trigger
   - mcp__Claude_Code_Remote__list_triggers
@@ -55,6 +58,8 @@ An agent that cannot go on without the owner does not guess and does not stop th
 
 A stage written with a `### Decision needed` section in its plan counts as the same request. `/decide` reads both.
 
+**Then tell the decisions session**, so the owner is asked now rather than at the next check. Read the comments of the open issue labelled `roadmap` for one opening with `<!-- decisions-session: <session id> -->`. If it names a session, send that session one line with `send_message` (the remote-session tool, not a local agent message): `<owner/repo>#N needs a decision: <the question>`. Send one message per request, never wait for a reply, and post nothing else about it. With no such comment, or a send that fails, do nothing more: the hourly check finds the label. A run that labels several issues at once sends one message that lists them all.
+
 ## Procedure
 
 1. **Repo.** `owner/repo` from `git remote get-url origin`.
@@ -78,12 +83,15 @@ A stage written with a `### Decision needed` section in its plan counts as the s
 
 `/decide --watch` turns the current session into the place where every question for the owner arrives:
 
-1. `list_triggers`. If a trigger named `decide: <owner/repo>` already fires into this session, keep it. Otherwise create one with `create_trigger` (no `create_new_session_on_fire`, so it fires into **this** session). Use a daily cron outside 06:00–09:00 Pacific, `initiation: "human_request"`, and the prompt `/decide`.
-2. Run `/decide` once now.
+1. **Register.** Find this session's id with `get_session` (no argument). On the open issue labelled `roadmap`, keep exactly one comment opening with `<!-- decisions-session: <session id> -->` and a line saying agents message this session when they ask for a decision. Edit the existing one if there is one (`update_issue_comment`), so a new decisions session replaces an old one. An agent that labels an issue `needs-decision` reads this comment and messages the session (see "Asking for a decision"), so a question reaches the owner when it is asked.
+2. **The hourly check.** `list_triggers`. If a trigger named `decide: <owner/repo>` already fires into this session, keep it. Otherwise create one with `create_trigger`, with no `create_new_session_on_fire`, so it fires into **this** session. Use an hourly cron (`0 * * * *`), `initiation: "human_request"`, and the prompt `/decide`. It catches what no message announced: a session that could not send, a label added by hand, a request made before this session registered.
+3. Run `/decide` once now.
 
-On each firing, an empty step 2 ends the turn silently. Otherwise send `PushNotification` with "N decisions waiting on <owner/repo>", then ask. The prompt stays open until the owner opens the session and answers. Agents never answer it. A firing that comes due while a prompt is open waits until the turn ends, then finds only what is still unanswered.
+**On each wake**, from an agent's message or the hourly trigger, run the procedure above. With nothing waiting, end the turn in one line, with no notification. Otherwise send `PushNotification` with "N decisions waiting on <owner/repo>", then ask. The prompt stays open until the owner opens the session and answers, and agents never answer it. A message or firing that arrives while a prompt is open waits until the turn ends, then finds only what is still unanswered.
 
-`/decide --unwatch` deletes that trigger.
+**Keep this session lean.** Every wake, an empty hourly one included, re-reads this session's whole context. So the drafting stays in subagents (step 3), the session does no other work, and its report per wake is a few lines.
+
+`/decide --unwatch` deletes the trigger and edits the registration comment to `<!-- decisions-session: none -->`, so agents stop messaging a session that no longer listens.
 
 ## What this skill never does
 
