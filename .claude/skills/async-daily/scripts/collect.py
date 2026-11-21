@@ -64,9 +64,10 @@ def instant(date: str) -> datetime:
     """An ISO 8601 commit date as a comparable moment.
 
     Commit dates keep their author's UTC offset, so comparing them as strings
-    misorders commits made in different time zones.
+    misorders commits made in different time zones. Newer git writes UTC as
+    `Z`, which `fromisoformat` only accepts from Python 3.11.
     """
-    return datetime.fromisoformat(date)
+    return datetime.fromisoformat(date[:-1] + "+00:00" if date.endswith("Z") else date)
 
 
 def is_repo(path: pathlib.Path) -> bool:

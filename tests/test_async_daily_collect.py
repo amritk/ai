@@ -119,7 +119,24 @@ def collect_json(*args: str, cwd: pathlib.Path | None = None, env: dict[str, str
     done = run_collect(*args, cwd=cwd, env=env)
     if done.returncode != 0:
         raise AssertionError(f"collect.py exited {done.returncode}: {done.stderr}")
-    return json.loads(done.stdout)
+    return normalise_dates(json.loads(done.stdout))
+
+
+def normalise_dates(value):
+    """Spell every UTC `date` as `+00:00`.
+
+    git's `%aI` writes UTC as `+00:00` up to some version and as `Z` after it
+    (the CI runner's git does the latter), so exact-string assertions would
+    otherwise depend on the machine's git.
+    """
+    if isinstance(value, dict):
+        return {
+            k: v[:-1] + "+00:00" if k == "date" and isinstance(v, str) and v.endswith("Z") else normalise_dates(v)
+            for k, v in value.items()
+        }
+    if isinstance(value, list):
+        return [normalise_dates(v) for v in value]
+    return value
 
 
 def only_repo(output: dict) -> dict:
@@ -261,6 +278,9 @@ class RegexTest(unittest.TestCase):
 
 
 class InstantTest(unittest.TestCase):
+    def test_instant_reads_newer_gits_z_suffix_as_utc(self):
+        self.assertEqual(collect.instant("2026-01-02T08:00:00Z"), collect.instant("2026-01-02T08:00:00+00:00"))
+
     def test_instant_reads_an_offset_date_as_the_same_moment_in_utc(self):
         self.assertEqual(
             collect.instant("2026-01-02T10:00:00+05:00"),
