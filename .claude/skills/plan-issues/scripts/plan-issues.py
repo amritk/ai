@@ -294,15 +294,14 @@ def set_issue(lines: list[str], stage: str | None, number: int, path: pathlib.Pa
     """Insert or replace `issue: N` at the plan's top level or in one stage."""
     if stage is not None:
         return set_key(lines, stage, "issue", str(number), path)
-        for i, line in enumerate(lines):
-            if re.match(r"^issue:", line):
-                lines[i] = f"issue: {number}\n"
-                return lines
-        for i, line in enumerate(lines):
-            if re.match(r"^stages:", line):
-                return [*lines[:i], f"issue: {number}\n", *lines[i:]]
-        raise PlanError(f"{path}: no `stages:` key to record the parent before")
-    raise AssertionError("unreachable")
+    for i, line in enumerate(lines):
+        if re.match(r"^issue:", line):
+            lines[i] = f"issue: {number}\n"
+            return lines
+    for i, line in enumerate(lines):
+        if re.match(r"^stages:", line):
+            return [*lines[:i], f"issue: {number}\n", *lines[i:]]
+    raise PlanError(f"{path}: no `stages:` key to record the parent before")
 
 
 def set_key(lines: list[str], stage: str, key: str, value: str, path: pathlib.Path) -> list[str]:

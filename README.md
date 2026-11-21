@@ -148,6 +148,21 @@ python3 evals/run.py --skill check --ref main --ref WORKTREE
 
 See [`evals/README.md`](evals/README.md) for what it grades and how to add a case.
 
+## Tests
+
+Every script in the repo has tests in `tests/`: the skills' bundled scripts,
+`scripts/validate.py` and `evals/run.py`. They use only the standard library's
+`unittest` (`plan-issues.py` itself needs PyYAML) and never call a model or the
+network. CI runs them on every pull request, after the validator and the eval
+fixture self-test:
+
+```
+python3 -m unittest discover -s tests -t .
+```
+
+`tests/test_every_script_is_tested.py` fails when a script has no test file that
+names its path, so a new script cannot land untested.
+
 ## Where these came from
 
 Most of the workflow and convention skills were collected from other repos;
@@ -178,7 +193,9 @@ never seen it.
 3. Strip repo-specific paths, package names, and commands, or state the
    condition under which they apply.
 4. `python3 scripts/validate.py`.
-5. If it changes how `check`, `check-iterate`, or their agents behave, run the
+5. A bundled script gets `tests/test_<skill>_<script>.py`, which runs it the way
+   the skill does (see [Tests](#tests)).
+6. If it changes how `check`, `check-iterate`, or their agents behave, run the
    eval (`evals/`) against `main` before merging.
 
 The validator checks each skill's frontmatter `name` matches its directory, that
