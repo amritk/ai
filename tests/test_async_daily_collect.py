@@ -585,6 +585,19 @@ class CollectCliTest(unittest.TestCase):
         self.assertEqual(output["authors"], ["nobody", "bob@"])
         self.assertEqual([c["subject"] for c in only_repo(output)["loose_commits"]], ["Bob loose"])
 
+    def test_authors_from_env_are_stripped_of_spaces_around_commas(self):
+        github = ("GitHub", "noreply@github.com")
+        self.repo.commit("Bob work", ["b.txt"], date=day(2), who=BOB, committer=github)
+        self.repo.push()
+
+        output = collect_json(
+            "--repo", str(self.repo.path), "--since", SINCE,
+            env=clean_env(ASYNC_DAILY_AUTHORS="jane@example.com, bob@example.com"),
+        )
+
+        self.assertEqual(output["authors"], ["jane@example.com", "bob@example.com"])
+        self.assertEqual([c["subject"] for c in only_repo(output)["loose_commits"]], ["Bob work"])
+
     def test_missing_author_exits_2_with_guidance_and_no_output(self):
         done = run_collect("--repo", str(self.repo.path))
 
@@ -628,6 +641,48 @@ class CollectCliTest(unittest.TestCase):
         self.assertEqual(output["remotes"], ["acme/widgets"])
         self.assertEqual(output["repos"], [])
         self.assertEqual(output["totals"], {"prs": 0, "loose_commits": 0, "agent_commits": 0})
+
+    # --- mixed time zones ---------------------------------------------------
+    # 10:00+05:00 is 05:00 UTC, three hours before 08:00+00:00, though it sorts
+    # after it as a string.
+
+    def test_prs_are_ordered_newest_first_by_moment_across_utc_offsets(self):
+        self.repo.commit("Earlier in UTC+5 (#1)", ["a.txt"], date="2026-01-02T10:00:00+05:00")
+        self.repo.commit("Later in UTC (#2)", ["b.txt"], date="2026-01-02T08:00:00+00:00")
+        self.repo.push()
+
+        prs = only_repo(self.run_jane())["prs"]
+
+        self.assertEqual(
+            [(p["number"], p["date"]) for p in prs],
+            [(2, "2026-01-02T08:00:00+00:00"), (1, "2026-01-02T10:00:00+05:00")],
+        )
+
+    def test_loose_commits_are_ordered_newest_first_by_moment_across_utc_offsets(self):
+        self.repo.commit("Earlier in UTC+5", ["a.txt"], date="2026-01-02T10:00:00+05:00")
+        self.repo.commit("Later in UTC", ["b.txt"], date="2026-01-02T08:00:00+00:00")
+        self.repo.push()
+
+        loose = only_repo(self.run_jane())["loose_commits"]
+
+        self.assertEqual([c["subject"] for c in loose], ["Later in UTC", "Earlier in UTC+5"])
+
+    def test_pr_date_is_its_latest_commit_by_moment_across_utc_offsets(self):
+        self.repo.commit("Initial", ["README.md"], date=day(1), who=BOB)
+        self.repo.git("checkout", "-q", "-b", "feature")
+        self.repo.commit("Earlier in UTC+5", ["a.txt"], date="2026-01-02T10:00:00+05:00")
+        self.repo.commit("Later in UTC", ["b.txt"], date="2026-01-02T08:00:00+00:00")
+        self.repo.git("checkout", "-q", "main")
+        self.repo.git(
+            "merge", "-q", "--no-ff", "feature",
+            "-m", "Merge pull request #3 from jane/tz", "-m", "Cross time zones",
+            date=day(3), who=BOB,
+        )
+        self.repo.push()
+
+        (pr,) = only_repo(self.run_jane())["prs"]
+
+        self.assertEqual((pr["number"], pr["date"]), (3, "2026-01-02T08:00:00+00:00"))
 
     # --- local work ---------------------------------------------------------
 
