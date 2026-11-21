@@ -270,7 +270,7 @@ def main() -> None:
     payload = json.dumps(
         {"checks": data["checks"], "findings": data["findings"]},
         ensure_ascii=False,
-    ).replace("</", "<\\/")
+    ).replace("<", "\\u003c")  # covers `</script>` and `<!--<script>` in the data
 
     substitutions = {
         "__TITLE__": esc(f"{data['title']} QA"),
@@ -302,12 +302,13 @@ def main() -> None:
     for level in SEVERITIES:
         substitutions[f"__N_{level.upper()}__"] = str(derived["severities"][level])
 
-    for placeholder, value in substitutions.items():
-        page = page.replace(placeholder, value)
-
-    leftover = sorted(set(re.findall(r"__[A-Z_]{3,}__", page)))
+    placeholder = re.compile(r"__[A-Z_]{3,}__")
+    leftover = sorted(set(placeholder.findall(page)) - substitutions.keys())
     if leftover:
         sys.exit(f"template placeholders left unfilled: {leftover}")
+    # One pass over the template, so placeholder-like text inside the data
+    # (`window.__NEXT_DATA__`) is never substituted or flagged.
+    page = placeholder.sub(lambda m: substitutions.get(m.group(0), m.group(0)), page)
 
     with open(args.out, "w", encoding="utf-8") as handle:
         handle.write(page)

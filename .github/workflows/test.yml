@@ -1,0 +1,31 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # plan-issues.py is the only script with a third-party import.
+      - run: pip install pyyaml
+      # The tests build throwaway git repos and commit in them.
+      - run: |
+          git config --global user.name "ci"
+          git config --global user.email "ci@example.invalid"
+          git config --global init.defaultBranch main
+      - name: Validate skills and agents
+        run: python3 scripts/validate.py
+      - name: Check eval fixtures
+        run: python3 evals/run.py --self-test
+      - name: Script tests
+        run: python3 -m unittest discover -s tests -t . -v

@@ -27,6 +27,7 @@ import datetime as dt
 import glob
 import html
 import json
+import re
 import os
 import sys
 
@@ -41,6 +42,18 @@ REQUIRED_KEYS = {
     "mergeable_state", "approvals", "changes_requested_by", "open_threads",
     "reviewer_concerns", "risk", "risk_reasons", "flags",
 }
+
+
+PLACEHOLDER = re.compile(r"__[A-Z_]{3,}__")
+
+
+def script_json(value: object) -> str:
+    """JSON safe to embed in a <script> block.
+
+    Escaping every `<` covers `</script>` and `<!--<script>`, either of which
+    would otherwise change where the browser ends the script.
+    """
+    return json.dumps(value, ensure_ascii=False).replace("<", "\\u003c")
 
 
 def load_batches(batches_dir: str) -> list[dict]:
@@ -180,7 +193,7 @@ def main() -> None:
         "__TITLE__": f"{args.repo.split('/')[-1]} PR Triage",
         "__REPO__": html.escape(args.repo),
         "__DATE__": today.strftime("%-d %b %Y"),
-        "__DATA__": json.dumps(prs, ensure_ascii=False).replace("</", "<\\/"),
+        "__DATA__": script_json(prs),
         "__TOTAL__": str(len(prs)),
         "__CRIT__": str(counts["Critical"]),
         "__HIGH__": str(counts["High"]),
@@ -195,12 +208,12 @@ def main() -> None:
         "__MERGEABILITY_NOTE__": mergeability_note,
         "__START_HERE__": render_start_here(highlights, prs),
     }
-    for key, value in replacements.items():
-        page = page.replace(key, value)
-
-    leftover = [k for k in replacements if k in page]
+    leftover = sorted(set(PLACEHOLDER.findall(page)) - replacements.keys())
     if leftover:
         sys.exit(f"unreplaced placeholders: {leftover}")
+    # One pass over the template, so placeholder-like text inside the data
+    # (a PR titled "Rename __DATE__") is never substituted or flagged.
+    page = PLACEHOLDER.sub(lambda m: replacements.get(m.group(0), m.group(0)), page)
 
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as fh:
