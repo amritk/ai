@@ -60,6 +60,15 @@ def git(repo: pathlib.Path, *args: str) -> str:
     return done.stdout if done.returncode == 0 else ""
 
 
+def instant(date: str) -> datetime:
+    """An ISO 8601 commit date as a comparable moment.
+
+    Commit dates keep their author's UTC offset, so comparing them as strings
+    misorders commits made in different time zones.
+    """
+    return datetime.fromisoformat(date)
+
+
 def is_repo(path: pathlib.Path) -> bool:
     return (path / ".git").exists()
 
@@ -227,9 +236,9 @@ def collect_repo(repo: pathlib.Path, since: str, patterns: list[str]) -> dict:
         )
         entry["commits"].append(commit["subject"])
         entry["files"].update(commit["files"])
-        entry["date"] = max(entry["date"], commit["date"])
+        entry["date"] = max(entry["date"], commit["date"], key=instant)
 
-    prs = sorted(grouped.values(), key=lambda p: p["date"], reverse=True)
+    prs = sorted(grouped.values(), key=lambda p: instant(p["date"]), reverse=True)
     for entry in prs:
         entry["files"] = sorted(entry["files"])[:40]
 
@@ -253,7 +262,7 @@ def collect_repo(repo: pathlib.Path, since: str, patterns: list[str]) -> dict:
         "remote": remote_slug(repo),
         "branch": git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip(),
         "prs": prs,
-        "loose_commits": sorted(loose, key=lambda c: c["date"], reverse=True),
+        "loose_commits": sorted(loose, key=lambda c: instant(c["date"]), reverse=True),
         "local": {
             "unpushed": unpushed,
             "staged": staged,
@@ -278,7 +287,7 @@ def main() -> int:
     parser.add_argument("--root", help="directory of repos to scan")
     args = parser.parse_args()
 
-    patterns = args.author or [p for p in os.environ.get("ASYNC_DAILY_AUTHORS", "").split(",") if p.strip()]
+    patterns = args.author or [p.strip() for p in os.environ.get("ASYNC_DAILY_AUTHORS", "").split(",") if p.strip()]
     if not patterns:
         print(
             "error: no author identity given. Pass --author <substring> (repeatable) or set "
