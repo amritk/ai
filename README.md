@@ -62,7 +62,7 @@ skills and nothing else.
 | --- | --- |
 | `check` | Reviews the branch's diff against main adversarially, inline when it is one shard and fanned out to read-only `checker` subagents when it is larger, then reduces the findings to a plan. |
 | `check-iterate` | Runs that as a loop — `checker` collects, `verifier` refutes, the primary agent fixes and pins each fix with a regression test — until a pass comes back clean or seven loops. |
-| `plan` | Writes plan files in the `.claude/plans/<slug>.plan.md` stages schema, researching the request in the repo first; with `--explore`, it also narrows the request down with you before drafting. In a repo with an open `roadmap` issue, it settles the plan's decisions, queue position and sign-off with you, then files it `ready` with `plan-issues`. |
+| `plan` | Writes plan files in the `.claude/plans/<slug>.plan.md` stages schema, researching the request in the repo first; with `--explore`, it also narrows the request down with you before drafting. In a repo with an open `roadmap` issue, it settles the plan's decisions, queue position and sign-off with you, then files it `ready` with `plan-issues` and opens a PR with the plan file, which it leaves for you or `pr-land` to merge. |
 | `plan-execute` | Executes a plan file, runs the plan's own verification commands, drives the check loop over the result, then publishes the run through `session-report`. |
 | `feature` | Takes requirements to merged PRs on Claude Code cloud — plans the work, gives each stage its own cloud session, branch, and PR, reviews each PR with fresh-context adversarial rounds, and merges when the gate passes. Stops once, for plan acceptance — or, in issue mode (`/feature #N`, `/feature --next`), builds a parent issue whose sub-issues are its stages, taking the parent's `ready` label as the sign-off and closing the issues as the PRs merge. |
 | `plan-issues` | Files plan files as GitHub issues: one parent per plan, one sub-issue per open stage, existing issues reused rather than duplicated, every parent ordered under one Roadmap issue, and the issue numbers recorded back into the plans. Idempotent. |
@@ -82,7 +82,7 @@ skills and nothing else.
 `perf` edits and may open a PR for a measured win. `pr-land` pushes fixes only to a
 branch you own or asked it to drive, and merges only the PRs you named — asking it is
 the approval.
-`plan-issues` writes issues and the plan files' `issue:` fields, and never closes or rewrites an existing issue. `decide` only comments and relabels, and only on an answer the owner picked.
+`plan-issues` writes issues and the plan files' `issue:` fields, then commits the plan files and opens a PR for them that it never merges. It never closes or rewrites an existing issue. `decide` only comments and relabels, and only on an answer the owner picked.
 `feature` is the exception to all of it — it plans, commits, pushes, opens PRs, and merges
 them on its own, which is why it stops for an explicit human approval of the plan
 before it does anything.

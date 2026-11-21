@@ -91,7 +91,8 @@ Use `<skill dir>/scripts/plan-issues.py` for everything except the GitHub calls.
 
 Use only the GitHub tools for writes. A label's first use creates it. Two agents that use a new label at the same moment can race, and one write fails; retry it once.
 6. **Verify.** Run `render` again. Every plan and every open stage now has an `issue`. For each parent, `issue_read get_sub_issues` lists its stages in plan order. Reorder with `sub_issue_write reprioritize` where they are out of order.
-7. **Hand back.** The plan files now carry issue numbers. Commit them under the repo's own rules (branch, PR, commit format). Report what was matched (with the evidence), what was created, what was reused, and what was skipped and why, with links to the Roadmap issue and each parent.
+7. **Open the PR.** The plan files now carry issue numbers, and the issues link to those files on the default branch, so the files have to get there. Commit them under the repo's own rules (branch, commit format, and any trailers it forbids), push, and open a pull request that holds only the plan changes, using the repo's PR template if it has one. Running this skill is the request for that PR. If the branch already has an open PR, push to it and do not open a second one. Do not merge the PR or wait for CI: landing it is a separate step for the owner, or `/pr-land`.
+8. **Hand back.** When `/plan` ran this skill, return to `/plan` now with the PR link and what was filed, and do not stop: `/plan` reports and ends the session as its own last step. Otherwise, report the PR link, what was matched (with the evidence), what was created, what was reused, and what was skipped and why, with links to the Roadmap issue and each parent. End by saying that this session is done and the PR is the only step left, then stop.
 
 ## Adding work later
 
