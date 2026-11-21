@@ -23,7 +23,8 @@ NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 # An explicit pointer at a bundled file, e.g. `<skill dir>/scripts/build.py`.
 # Anchored on the `<skill dir>/` prefix so paths that merely look similar --
 # `docs/assets/custom.css` inside a config example -- are not mistaken for one.
-REF_RE = re.compile(r"<skill dir>/([A-Za-z0-9._/-]+)")
+# It never ends on a dot, so a pointer that closes a sentence keeps its path.
+REF_RE = re.compile(r"<skill dir>/([A-Za-z0-9._/-]*[A-Za-z0-9_/-])")
 # A Markdown link target. Code spans and fences are stripped before this runs,
 # so an example path inside backticks is never mistaken for a link.
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
@@ -65,7 +66,9 @@ def frontmatter(path: pathlib.Path) -> dict[str, str] | None:
         match = re.match(r"^([a-zA-Z-]+):\s*(.*)$", line)
         if match:
             key = match.group(1)
-            fields[key] = match.group(2).strip()
+            value = match.group(2).strip()
+            # `description: ""` is an empty scalar, not a two-character one.
+            fields[key] = "" if value in ('""', "''") else value
         elif key and line.startswith((" ", "\t")):
             # A folded or indented continuation of the previous scalar, or a
             # list item; comments carry nothing worth keeping.

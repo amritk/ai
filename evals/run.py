@@ -166,13 +166,20 @@ def self_test(cases: list[dict]) -> int:
     return 1 if failures else 0
 
 
+# Joins the plan files of one run, so each keeps its own frontmatter boundary.
+PLAN_SEPARATOR = "\n<!-- next plan -->\n"
+FRONTMATTER_RE = re.compile(r"\A---\n.*?\n---[ \t]*(?:\n|\Z)", re.S)
+
+
 def parse_findings(plan_text: str) -> list[list[tuple[str, int, int]]]:
     """One entry per finding bullet in the plan body, holding every file:line it cites.
 
     The plan's frontmatter todos restate the body, and its Notes section is
     coverage gaps rather than findings, so only body bullets outside Notes count.
     """
-    body = plan_text.split("\n---", 2)[-1] if plan_text.startswith("---") else plan_text
+    # Strip only each plan's leading frontmatter: a `---` rule later in a body
+    # separates sections and must not swallow the findings above it.
+    body = "\n".join(FRONTMATTER_RE.sub("", plan, count=1) for plan in plan_text.split(PLAN_SEPARATOR))
     findings, section = [], ""
     for line in body.splitlines():
         if line.startswith("## "):
@@ -235,6 +242,9 @@ def read_transcript(path: pathlib.Path) -> tuple[dict, int]:
             event = json.loads(raw)
         except json.JSONDecodeError:
             continue
+        # stderr is merged into the transcript, so a line can be JSON but not an event.
+        if not isinstance(event, dict):
+            continue
         if event.get("type") == "result":
             result = event
             duration_ms += event.get("duration_ms") or 0
@@ -287,7 +297,7 @@ def run_one(case: dict, ref: str, rep: int, args, claude_dirs: dict, out: pathli
     }
     if args.skill == "check":
         plans = sorted((repo / ".claude" / "plans").glob("*.plan.md"))
-        (run_dir / "plan.md").write_text("\n".join(p.read_text() for p in plans))
+        (run_dir / "plan.md").write_text(PLAN_SEPARATOR.join(p.read_text() for p in plans))
         record.update(grade_check(case, run_dir))
     else:
         record.update(
