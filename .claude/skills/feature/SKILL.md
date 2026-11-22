@@ -93,7 +93,7 @@ Invoke with `/feature [requirements | plan slug] [flags]`.
 
 - First non-flag token: a plan slug/path (`.claude/plans/<slug>.plan.md`) to execute, a parent issue (`#123` or its URL) to build in **issue mode**, or free-text requirements to plan from. Free text means Phase 1 runs; a slug means it is skipped; an issue runs Phase 1 in issue mode (see **Issue mode**).
 - `--next`: claim the next ready parent issue from the Roadmap issue and run it in issue mode. With nothing ready, report what is waiting and stop.
-- `--max-runs N`: with `--next`, the most parent issues `in-progress` at once across the repo (default **2**). At the cap, `--next` reports and stops without claiming.
+- `--max-runs N`: with `--next`, the most parent issues `in-progress` at once across the repo (default **5**). At the cap, `--next` reports and stops without claiming.
 - `--dry-run`: plan, slice, and print the fan-out table — spawn nothing, open nothing, merge nothing.
 - `--max-slices N`: concurrent cloud sessions (default **4**).
 - `--max-rounds N`: adversarial review rounds per PR (default **6**). Only blocking findings open a round (`references/review-loop.md`), so a PR that is still finding blocking problems after six is one a human should look at.
