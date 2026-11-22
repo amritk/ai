@@ -88,6 +88,21 @@ Visual tests are `*.e2e.ts` with baselines committed next to them. Two things ab
 
 Before adding a Chromium flag on the theory that it stabilises rendering, prove it changes anything: pass something unmissable (`--blink-settings=minimumFontSize=30`) and check the screenshot actually moved.
 
+## Property tests
+
+Example tests check the inputs their author thought of. When the same author wrote the code, the tests share its blind spots. A property test states a rule that must hold for every input and lets a generator search for the one that breaks it. That finds edge cases nobody picked, and it runs as an ordinary test, at no cost per review.
+
+Reach for one when the code has a rule you can state without naming an input:
+
+- **Round trip**: `parse(serialize(x))` equals `x`; decode undoes encode.
+- **Invariant**: a balance never goes negative; a sorted list stays sorted after an insert; output length never exceeds the limit.
+- **Idempotency**: applying it twice gives the same result as once (normalisers, formatters, migrations).
+- **Equivalence**: the new implementation returns what the old one, or a simple reference version, returns.
+
+Use `fast-check` in TypeScript (`fc.assert(fc.property(fc.string(), (s) => ...))` inside an ordinary `it`), Hypothesis in Python, `proptest` in Rust. Use the library only when the repo already depends on it. Adding one is a dependency change: say so in the PR rather than slipping it in. When a property test fails, pin the shrunk counterexample it prints as an ordinary example test too, so the case stays covered even if the generator changes.
+
+Keep example tests for the cases that document behaviour. A property test sits next to them; it does not replace them.
+
 ## Style and best practices
 
 - Clarity first. Write tests that are easy to read and understand, even for someone unfamiliar with the code.

@@ -42,8 +42,8 @@ Title `Feature: <slug>`, label `feature-run`, body:
 ## Slices
 | stage | owns | model | depends on | session | branch | PR | CI | rounds | state |
 |---|---|---|---|---|---|---|---|---|---|
-| api-types | `src/types/**` | sonnet | — | `session_01ABC…` | `feature/foo/api-types` | #41 | green | 2/6 | merged |
-| api-client | `src/client/**` | lead | api-types | `session_01DEF…` | `feature/foo/api-client` | #42 | red | 1/6 | fixing |
+| api-types | `src/types/**` | sonnet | — | `session_01ABC…` | `feature/foo/api-types` | #41 | green | 2/3 (3,0) | merged |
+| api-client | `src/client/**` | lead | api-types | `session_01DEF…` | `feature/foo/api-client` | #42 | red | 3/3+1 (4,3,1) | fixing |
 | ui-panel | `src/ui/panel/**` | lead | api-client | — | — | — | — | — | pending |
 | _acceptance_ | — | sonnet | all | `session_01GHI…` | — | — | — | — | running |
 
@@ -52,6 +52,8 @@ Title `Feature: <slug>`, label `feature-run`, body:
 - 2026-09-15T10:41Z #41 round 1 — 3 confirmed, sent to worker
 - 2026-09-15T11:15Z #41 converged after round 2, merged
 ```
+
+**Rounds**: `{rounds run}/{max-rounds}`, then `+1` once the extra round is granted, then the confirmed blocking count of each round in order. The counts are what the extra-round rule compares (`review-loop.md`, **Stop rules**), so they live here rather than in the lead's memory.
 
 **States**: `pending` → `running` → `review` → `fixing` → `converged` → `merged`, plus `escalated` and `aborted` as terminal states.
 
