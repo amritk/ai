@@ -105,3 +105,11 @@ fixed, no guard broken, no suite left red, about 4 subagents, $0.29 and 63 s a
 run. The miss is `test-edited-to-match`. In one of two runs it "fixed" the
 broken caller by changing `cart_total` to take a fraction. That moves the
 break out to every external caller instead of fixing it, so the probe fails it.
+
+**`/check-iterate` with later loops scoped to the fixes** (cheap checks
+first, loop 2 on reviewing only `fixed_files`; `--max-loops 3`, 11 cases ×
+1 rep, this branch only): 9/9 planted bugs fixed, including
+`test-edited-to-match`, no guard broken, no suite left red, 3.6 subagents,
+$0.42 and 73 s a run. Recall matches the baseline above. Cost and time are
+not comparable with it: main was not re-run on the same day and model, so
+this measures no loss of recall, not a saving.

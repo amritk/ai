@@ -138,7 +138,7 @@ The primary agent fixes each confirmed finding directly, in rank order (security
 
 ### Loop cap
 
-The cap is 3 loops. A run that is still confirming findings after three is usually one where the fix needs a decision the loop cannot make, and every loop past that is a full collect-and-verify fan-out spent on it. The baseline in `evals/README.md` was measured at `--max-loops 3` (17 of 18 planted bugs fixed), before later loops were scoped to the fixes; re-run the eval to compare after changing either.
+The cap is 3 loops. A run that is still confirming findings after three is usually one where the fix needs a decision the loop cannot make, and every loop past that is a full collect-and-verify fan-out spent on it. The baseline in `evals/README.md` was measured at `--max-loops 3` (17 of 18 planted bugs fixed), before later loops were scoped to the fixes; re-run the eval to compare after changing either. A one-rep run with scoped loops fixed 9 of 9.
 
 **One extra loop when it is converging.** At the cap with findings still open, run one more loop only if the last loop confirmed **fewer** findings than the loop before it, and that earlier loop was itself loop 2 or later. Loop 1 reviews the whole diff and later loops review only the fixes, so comparing against loop 1 would almost always say "fewer". In practice the extra loop exists only for caps of 3 or more; with `--max-loops 1` or `2` (the `feature` worker brief uses 2) the cap is exact. Grant it at most once per run, and record it in the ledger. A loop that confirmed the same number or more stops at the cap.
 
