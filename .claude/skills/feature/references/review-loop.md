@@ -1,6 +1,6 @@
 # The review loop — adversarial, fresh, bounded
 
-One PR, up to `--max-rounds` rounds (default 6), no discussion. Most PRs converge in two. A round is opened only by a blocking finding (see **Blocking and non-blocking**).
+One PR, up to `--max-rounds` rounds (default 3, plus one extra round while the blocking findings are still going down — see **Stop rules**), no discussion. Most PRs converge in two. A round is opened only by a blocking finding (see **Blocking and non-blocking**).
 
 ## What a round is
 
@@ -17,11 +17,33 @@ git fetch origin feature/{slug}/{stage-id}
 git diff origin/{default branch}...{head SHA} -- . {':(exclude)<glob>' per generated glob} > {scratchpad}/pr-{n}-{short sha}.diff
 ```
 
+**From round 2 on, also write the round's delta** — what the worker changed since the head the last round reviewed — and give collectors both files:
+
+```
+git diff {previous reviewed SHA} {head SHA} -- . {':(exclude)<glob>' per generated glob} > {scratchpad}/pr-{n}-{short sha}.delta.diff
+```
+
+Skip the delta, and send the full diff alone, when the worker merged or rebased onto the default branch between the two heads (`git merge-base origin/{default branch} <sha>` differs for the two SHAs): the delta would then carry everyone else's changes too.
+
 The redirect keeps the diff out of the lead's context, and in-process agents share the lead's filesystem, so every collector and verifier reads the same file instead of each fetching the diff again through the API — a past run made 437 `get_file_contents` calls doing that, and the reviewers read generated goldens nobody needed. They still use the GitHub tools for file context outside the diff; they do not need a checkout of their own, which is why review runs as in-process agents rather than cloud sessions.
 
 `pr-adversary` rather than `checker` for one reason: `checker` reviews a local diff against a merge-base, and the lead has no checkout of the worker's branch. Same mandate, different source of truth.
 
-Each round spawns **new** agents. Never continue a previous round's agent with `SendMessage`, and never pass it the previous round's findings. Fresh context is the mechanism that makes the loop adversarial instead of collegial — an agent that remembers arguing about a finding starts negotiating over it.
+Each round spawns **new** agents. Never continue a previous round's agent with `SendMessage`. Fresh context is the mechanism that makes the loop adversarial instead of collegial — an agent that remembers arguing about a finding starts negotiating over it.
+
+**Round 2 on: start from where the last round ended, not from scratch.** The full diff was reviewed in round 1. A later round's collectors review the **delta**, and get the previous round's **confirmed** findings — the batch the worker was sent — as what the delta was meant to fix:
+
+```
+This is round {n}. The PR's full diff was reviewed in an earlier round; review the
+delta file — what the worker pushed since — against the full diff for context.
+The worker was asked to fix the findings below. For each, check that the delta
+fixes it, that the fix broke nothing around it, and probe the sibling cases of the
+same shape. Then review the rest of the delta as usual.
+
+{confirmed findings from the last batch: file:line, one-line title}
+```
+
+Never pass refuted or disputed findings, or anything the worker said about them: those are what an agent would start negotiating over, and the `rejected` ledger already drops them. Shard a later round on the delta's size, not the PR's, so most later rounds are a single collector. This is cheaper than re-reviewing the whole PR every round, and it finds more, because attention goes to the code that just changed. A round on the full diff alone (no delta, as above) runs as round 1 does.
 
 **Dedupe before verifying.** Merge the collectors' findings on `file:line` + root cause, then drop any that match the PR's `rejected` ledger. Only what is left goes to a verifier. A known false positive costs nothing to drop here and a full verification to drop later.
 
@@ -77,7 +99,8 @@ Deduplicate on `file:line` + root cause, not on wording — two agents describin
 
 - **Converged**: a full round where zero blocking findings survive verification. This is the only clean exit.
 - **Stalemate**: a round's confirmed findings are identical to the previous round's — the worker is not actually fixing them. Stop immediately and escalate; the remaining rounds will produce the same output.
-- **Budget exhausted**: `--max-rounds` reached with blocking findings open → **escalate, never merge**. A PR still finding blocking problems after six rounds is a PR a human should look at.
+- **One extra round while converging**: `--max-rounds` reached with blocking findings open, but the last round confirmed **fewer** blocking findings than the round before it → allow one more round, once per PR, and log it. A PR that is clearly getting there finishes; a stuck one does not get the extra round.
+- **Budget exhausted**: `--max-rounds` reached with blocking findings open and no extra round to give (it was used, or the count did not go down) → **escalate, never merge**. A PR still finding blocking problems after three rounds is usually one that needs a decision the loop cannot make, and a human should look at it.
 - **Worker unreachable**: findings outstanding and the slice's session is dead → respawn per `fan-out.md`, or escalate on a second failure.
 
 ## What the reviewers look for
@@ -86,7 +109,7 @@ Beyond the standard three dimensions the `checker` agent covers (security, relia
 
 1. **Scope.** Any file outside the stage's `Owns` globs is a finding. This is how parallel workers stay out of each other's way, and it is invisible to a normal PR review.
 2. **Plan fidelity.** The diff must implement the stage's todos — no more, no less. A todo with no corresponding change, or a change no todo accounts for, is a consistency finding.
-3. **Gate integrity.** Any edit that weakens verification is a **blocking** finding regardless of severity: lowered coverage thresholds, added coverage ignores, `skip`/`only`/`todo` on tests, loosened lint rules, `@ts-expect-error` added to make types pass, CI workflow edits. A worker under pressure to hit 100% will reach for these, and they are the one class of change that makes every other gate meaningless.
+3. **Gate integrity.** Any edit that weakens verification is a **blocking** finding regardless of severity: lowered coverage thresholds, added coverage ignores, `skip`/`only`/`todo` on tests, loosened lint rules, `@ts-expect-error` added to make types pass, CI workflow edits, a rule removed or loosened in the repo's agent guidance (`CLAUDE.md`, `AGENTS.md`, `REVIEW.md`, `.claude/rules/`). Reviewers read that guidance from the default branch, never from the PR head, so a PR cannot rewrite the rules it is judged by. A worker under pressure to hit 100% will reach for these, and they are the one class of change that makes every other gate meaningless.
 4. **Test quality.** 100% coverage is a floor, not evidence. Assertions that cannot fail, tests that mock the thing under test, and snapshot tests standing in for behavioural ones are findings — coverage is what makes them look adequate.
 
 ## Cost

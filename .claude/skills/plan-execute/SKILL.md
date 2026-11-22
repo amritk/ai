@@ -4,7 +4,7 @@ description: Execute a repo plan file end-to-end, run the plan's own verificatio
   commands, stage the result, then run the check-iterate convergence loop on the
   branch's diff against main — review by read-only `checker` subagents, refutation
   by `verifier` subagents, fixes by the primary agent — until a loop comes back
-  clean (consensus) or 7 loops, then publishes a linked run report through the
+  clean (consensus) or the loop cap (3), then publishes a linked run report through the
   `session-report` skill. Use when asked to "execute the plan", "run
   /plan-execute", or "implement the plan and check it". Stages everything; never
   commits.
@@ -45,7 +45,7 @@ Invoke with `/plan-execute [plan slug or path] [--max-loops N] [--dimension <nam
 **Arguments** (from `$ARGUMENTS`):
 
 - First non-flag token: the plan — a path, or a slug resolved to `.claude/plans/<slug>.plan.md`.
-- `--max-loops N`: check-loop cap (default **7**).
+- `--max-loops N`: check-loop cap (default **3**, plus the one extra loop `check-iterate` allows while findings are still going down).
 - `--dimension` and trailing free text: passed through to the check loop.
 - `--no-report`: skip Phase 5 (the `session-report` skill). The terminal summary is still printed.
 
@@ -75,7 +75,7 @@ Before staging, run every command the plan's `## Verification` section lists (sc
 
 ## Phase 3: Check loop
 
-Run the loop from the `check-iterate` skill, exactly as written there — resolve the merge-base with main, collect via `checker` fan-out over the diff against it, verify by `verifier` refutation, fix confirmed findings with the primary agent (pinning security and reliability fixes with a regression test), stage the fixes — up to `--max-loops` (default 7) or until a loop confirms zero findings (consensus). The first review counts as loop 1. Keep the `rejected`/`skipped` ledgers as that skill defines so the loop converges.
+Run the loop from the `check-iterate` skill, exactly as written there — resolve the merge-base with main, collect via `checker` fan-out over the diff against it, verify by `verifier` refutation, fix confirmed findings with the primary agent (pinning security and reliability fixes with a regression test), stage the fixes — up to `--max-loops` (default 3, with that skill's one extra loop while findings are still going down) or until a loop confirms zero findings (consensus). The first review counts as loop 1. Keep the `rejected`/`skipped` ledgers as that skill defines so the loop converges. Skip that skill's cheap-checks step (Phase 0, step 4): Phase 1b has just run the same commands.
 
 One addition to the collector focus in every loop: include a pointer to the plan file so reviewers can flag work that **diverges from what the plan promised** (a todo marked `completed` whose change isn't in the diff, or staged changes no todo accounts for) as a consistency finding.
 
@@ -91,8 +91,10 @@ Short — the template below and nothing more:
   Check loop: {consensus after N loops | loop cap hit | stalemate} — {total} findings fixed
   Needs a human call: {file:line one-liners, or "none"}
   {If loops ended with findings open: list them}
+  {"Make it a rule:" line from the check loop, if it proposed one}
 
 All work is staged; nothing was committed.
+Commit trailer: Verified: plan-execute ({consensus after N loops | cap hit, K open | stalemate, K open})
 Run report: {artifact URL, or the HTML path when the Artifact tool is unavailable}
 ```
 

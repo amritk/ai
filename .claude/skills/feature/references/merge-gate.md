@@ -32,6 +32,7 @@ All eight, or it does not merge.
 - **Never bypass.** No admin merge, no force-merge, no disabling a required check, no dismissing a review to get past protection. If protection blocks the merge, protection is right and the run escalates.
 - One at a time, in dependency order. A converged PR merges at its current head, on the CI that ran there, **unless it needs an update** from the default branch first (below). An update costs a merge, a regeneration, a full suite run and a CI cycle, one PR after another. A PR whose files no other PR touched gets nothing for that cost that the acceptance pass (`acceptance.md`) does not already check, against the whole merged result.
 - The lead writes the squash commit message at merge from the PR's final state, so the message meets the repo's convention without a review round spent on the PR body.
+- The squash message ends with a `Verified:` trailer saying how the change was checked, for example `Verified: pr-adversary 2 rounds, CI green` (add `, qa` when acceptance exercised it). A merge picked by a human at close-out with blocking findings open says so: `Verified: none (merged by owner, 1 blocking finding open)`. The history then records how each commit was checked, and the unchecked ones can be found by searching for them. Leave the trailer off when the repo's `CLAUDE.md` forbids commit trailers.
 - If updating a branch produces a conflict, that PR goes back to its worker. The lead does not resolve conflicts in code it did not write.
 
 ### When a PR updates before it merges

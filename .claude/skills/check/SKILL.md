@@ -20,6 +20,8 @@ allowed-tools:
   - Bash(git status:*)
   - Bash(git rev-parse:*)
   - Bash(git merge-base:*)
+  - Bash(git show:*)
+  - Bash(git ls-tree:*)
   # Write + sed/python3 are needed by Phase 3: the plan file must be written to
   # .claude/plans/ and its YAML frontmatter validated per the plan skill.
   - Bash(sed:*)
