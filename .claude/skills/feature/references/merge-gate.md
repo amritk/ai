@@ -10,7 +10,7 @@ The facts for conditions 3–6 come from one fresh `subagent_type: "run-reconcil
 
 The reconciler has no job-log tool, so it cannot see how many tests a shard skipped. Where that count matters, the lead reads it itself with `get_job_logs`, tail lines only, and logs it. A count the lead did not read is recorded as unread, never as zero.
 
-1. **Review converged** — a full round with zero blocking findings surviving verification. Not "the last round was small". Non-blocking findings sent at convergence do not hold the gate.
+1. **Review converged** — the latest reviewed head had zero blocking findings surviving verification, and every head since round 1 was reviewed, in full or as a delta from a head that was itself reviewed (`review-loop.md`). A delta round counts; a head no round looked at does not. Not "the last round was small". Non-blocking findings sent at convergence do not hold the gate.
 2. **`skipped` and `disputed` are empty.** Anything awaiting a human call blocks the merge by definition.
 3. **CI green on this head.** Every required check concluded `success`. Not "green on the previous commit", not "the failure looks unrelated". A required check that never ran is not green. The one exception is a job the ledger lists as skipped on PRs by design (Phase 0.4): its `if:` never lets it run on a pull request, so its absence is expected, not missing. It is never a required check, and the acceptance pass names it as unexercised, so the reader knows its check first runs at release.
 4. **GitHub says mergeable.** `pull_request_read` reports `mergeable: true` and a `mergeable_state` that permits merging. Trust GitHub's answer over your own reasoning about conflicts — it knows about protection rules, required reviews, and stale branches that you do not.
@@ -18,6 +18,7 @@ The reconciler has no job-log tool, so it cannot see how many tests a shard skip
 6. **No sensitive paths.** If the diff touches any of these, escalate regardless of everything above:
    - `.github/workflows/**`, CI configuration, release or publish scripts
    - coverage, lint, or type-check configuration
+   - the agent guidance reviewers judge by: `CLAUDE.md`, `AGENTS.md` and `REVIEW.md` at any depth, and `.claude/rules/**`. Reviewers read these from the default branch, so a change to them becomes the rule every later review applies; a human decides that, not the loop.
    - authentication, authorization, secrets handling, crypto
    - dependency manifests beyond the packages the stage legitimately added
    - anything the repo's CODEOWNERS assigns to a specific team
@@ -32,7 +33,7 @@ All eight, or it does not merge.
 - **Never bypass.** No admin merge, no force-merge, no disabling a required check, no dismissing a review to get past protection. If protection blocks the merge, protection is right and the run escalates.
 - One at a time, in dependency order. A converged PR merges at its current head, on the CI that ran there, **unless it needs an update** from the default branch first (below). An update costs a merge, a regeneration, a full suite run and a CI cycle, one PR after another. A PR whose files no other PR touched gets nothing for that cost that the acceptance pass (`acceptance.md`) does not already check, against the whole merged result.
 - The lead writes the squash commit message at merge from the PR's final state, so the message meets the repo's convention without a review round spent on the PR body.
-- The squash message ends with a `Verified:` trailer saying how the change was checked, for example `Verified: pr-adversary 2 rounds, CI green` (add `, qa` when acceptance exercised it). A merge picked by a human at close-out with blocking findings open says so: `Verified: none (merged by owner, 1 blocking finding open)`. The history then records how each commit was checked, and the unchecked ones can be found by searching for them. Leave the trailer off when the repo's `CLAUDE.md` forbids commit trailers.
+- The squash message ends with a `Verified:` trailer saying how the change was checked, for example `Verified: pr-adversary 2 rounds, CI green`, or `Verified: pr-adversary 3+1 rounds, CI green` when the extra round was used. The history then records how each commit was checked, and a commit without the line was not merged by this gate. Leave the trailer off when the repo's `CLAUDE.md` forbids commit trailers.
 - If updating a branch produces a conflict, that PR goes back to its worker. The lead does not resolve conflicts in code it did not write.
 
 ### When a PR updates before it merges

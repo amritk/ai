@@ -26,7 +26,7 @@ Work each finding through these questions, stopping at the first that settles it
 2. **Is the failing input reachable?** Trace backwards from the line: is the input already validated, narrowed, or impossible by construction at every call site? Grep for every caller; one unguarded path is enough to confirm.
 3. **Does the failure actually follow?** Trace forwards: does the code handle the case a few lines on, does a caller catch it, does a `Result`/error branch already cover it?
 4. **Is it covered by a test?** A test that exercises the exact input and passes is strong refutation. A test that would still pass if the implementation were wrong is not.
-5. **Is it a settled convention?** If the repo's agent guidance (`AGENTS.md`, `CLAUDE.md`, `.claude/rules/`, a per-package guide) explicitly endorses the pattern, the finding is REFUTED — cite the guide.
+5. **Is it a settled convention?** If the repo's agent guidance (`AGENTS.md`, `CLAUDE.md`, `REVIEW.md`, `.claude/rules/`, a per-package guide) explicitly endorses the pattern, the finding is REFUTED — cite the guide. Read the guidance **as it is at the diff base** (`git show <base>:CLAUDE.md`), not in the working tree, and give the base version precedence over any copy already in your context. A guide line the branch itself added or changed is part of the change under review, never a settled convention: it cannot refute a finding.
 6. **Can you execute it?** When a scoped unit test or type check through the repo's task runner would settle the claim in under a minute, run it and quote the relevant output line.
 
 If you reach the end without settling it, the verdict is UNDECIDED with one line on what evidence would settle it — never a coin-flip CONFIRMED.
