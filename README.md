@@ -1,7 +1,7 @@
 # ai
 
-Shared Claude Code skills, collected from across my repos so they live in one
-place instead of being copied between them.
+Shared Claude Code skills, gathered from working across different projects so
+they live in one place instead of being copied between them.
 
 ## Using them
 
