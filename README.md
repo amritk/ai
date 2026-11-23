@@ -165,11 +165,13 @@ names its path, so a new script cannot land untested.
 
 ## Where these came from
 
-Most of the workflow and convention skills were collected from other repos;
-`async-daily`, `debug`, `qa`, `session-report`, `feature`, `pr-land`, `perf`, and the `verifier`
-and `pr-adversary` agents were written here. `typescript` and `tests` existed in
-several divergent copies — the richest of each was taken and the repo-specific
-commands generalised.
+These grew out of working across different projects and out of reading how
+engineering teams at other companies run their day-to-day — how they review,
+plan, report status, and land changes — rather than being lifted from any one
+codebase. A habit that kept paying off in more than one project became a skill;
+a process described well in an article was adapted until it worked for an agent.
+`typescript` and `tests` had drifted into several versions across projects — the
+richest of each was kept and its project-specific commands generalised.
 
 Repo-specific paths, package names, and task-runner commands are either removed
 or stated with the condition under which they apply. `pr-review` resolves the
