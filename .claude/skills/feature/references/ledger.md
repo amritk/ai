@@ -30,6 +30,7 @@ Title `Feature: <slug>`, label `feature-run`, body:
 - skipped on PRs by design: `{job}` (`if: {condition}`) · … , or "none"
 - known environment failures: {suites that fail in a worker container regardless of the change, or "none"}
 - report: {publish | file}
+- sensitive extras: CODEOWNERS team globs `{glob}` · … · hook scripts `{path}` · … , or "none" (`merge-gate.md`, condition 7)
 - issue mode: parent #{N} · stages {stage-id} → #{n} · … (or "no" outside issue mode)
 - bounds: deadline {ISO timestamp} · no-branch 45m · no-commit 90m · re-runs 1 per check per head · check-ins 30→60→120m on no drift, capped at the shortest running silence timeout
 
@@ -53,9 +54,9 @@ Title `Feature: <slug>`, label `feature-run`, body:
 - 2026-09-15T11:15Z #41 converged after round 2, merged
 ```
 
-**Rounds**: `{rounds run}/{max-rounds}`, then `+1` once the extra round is granted, then the confirmed blocking count of each round in order. The counts are what the extra-round rule compares (`review-loop.md`, **Stop rules**), so they live here rather than in the lead's memory.
+**Rounds**: `{rounds run}/{max-rounds}`, then `+1` once the extra round is granted, then `+f{n}` for the feedback rounds a person started (they sit outside the budget, `review-loop.md` step 0), then the confirmed blocking count of each budgeted round in order. The extra-round rule compares budgeted rounds only. The counts are what the extra-round rule compares (`review-loop.md`, **Stop rules**), so they live here rather than in the lead's memory.
 
-**States**: `pending` → `running` → `review` → `fixing` → `converged` → `merged`, plus `escalated` and `aborted` as terminal states.
+**States**: `pending` → `running` → `review` → `fixing` → `converged` → `merged`, plus `escalated` and `aborted` as terminal states. A `converged` row goes back to `fixing` when a person's change request or a confirmed blocking bot finding is sent to its worker (`merge-gate.md`, **Feedback on the PR**).
 
 The acceptance pass gets a row of its own so the wake loop stays uniform — it is spawned, reconciled, and read back exactly like a slice, and a lead resuming after a compaction cannot tell it apart from one. It goes `pending` → `running` → `met` or `escalated`, and it has no branch, no PR, and no rounds. Its dependency is every slice.
 
@@ -68,7 +69,7 @@ Every wake that is not an echo (SKILL Phase 4.0), in this order:
 1. **Read the issue.** Do not act on anything you remember. If your context still holds the run, treat it as a cache to be validated, not a source.
 2. **Reconcile each row against reality.** The ledger is a claim; GitHub is the fact. A fresh `run-reconciler` agent does steps 1 and 2 and returns only the drift, so the PR and CI payloads below never reach the lead's context. These are the calls it makes:
    - branch: `list_branches`
-   - PR and its `mergeable` / `mergeable_state` / review state: `pull_request_read`
+   - PR and its `mergeable` / `mergeable_state` / review state, and every feedback item whose id is not yet in the log: `pull_request_read`, `issue_read` for conversation comments
    - CI on the PR's **current head**: `actions_list` / `get_check_run`
    - worker liveness: `get_session` → `status_bucket`
    Write back every row that drifted, and log the drift. Rows drift constantly and that is normal — events get dropped, workers push between wakes.
@@ -86,6 +87,8 @@ Every action the lead takes is guarded by a check that it has not already happen
 | open the tracking issue | no open issue titled `Feature: <slug>` |
 | start a review round | PR not converged, no round already logged for that PR head SHA, and the head is not conflicted (CI state does not matter) |
 | send a review batch | round number not already logged for that PR head SHA |
+| act on a feedback item | that review, comment or thread id not already in the log as `feedback <id>` |
+| say a PR is waiting on people | not already logged for that PR at that head SHA |
 | merge | PR still open, and gate re-evaluated at the current head |
 | tell a worker to update from the default branch | the PR's turn to merge, one of the update rules in `merge-gate.md` holds, and no update already logged for that base SHA |
 | re-arm a wake | no pending trigger for this run (`list_triggers`) |
