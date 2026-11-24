@@ -213,6 +213,8 @@ Without the MCP tools, the same three steps go through `gh api` against
 `/repos/<owner>/<repo>/pulls/<n>/reviews` with a `comments` array (`path` + `line` + `body`) and
 `"event": "COMMENT"` — one call, same result.
 
+Every posted body — the review body and each line comment — opens with the line `<!-- pr-review -->`. This skill writes as the user's account, so without the marker `pr-land` and `/feature` would read its threads as the user's own feedback and wait for someone to resolve them.
+
 Every posted body ends with the attribution footer:
 
 ```
