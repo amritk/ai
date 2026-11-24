@@ -3,6 +3,47 @@
 Shared Claude Code skills, gathered from working across different projects so
 they live in one place instead of being copied between them.
 
+## How it works
+
+An idea becomes merged code in five steps. You decide what to build and answer the questions only you can; agents do the rest, and anything they cannot settle comes back to you.
+
+```mermaid
+flowchart TD
+    idea(["An idea"]) --> plan["<b>/plan</b><br/>researches the repo, settles<br/>the open decisions with you"]
+    plan --> planfile["<b>Plan file</b><br/>.claude/plans/slug.plan.md,<br/>opened as a PR"]
+    planfile --> issues["<b>/plan-issues</b><br/>a parent issue, one sub-issue per stage,<br/>queued under the Roadmap issue"]
+    issues --> signed{"Signed off?"}
+    signed -- "needs-decision" --> decide["<b>/decide</b><br/>you answer, one question at a time"]
+    decide --> signed
+    signed -- "ready" --> lead
+
+    subgraph run ["/feature #N or /feature --next"]
+        lead["<b>Lead session</b><br/>claims the parent issue,<br/>keeps a ledger in a tracking issue"]
+        lead --> worker["<b>One cloud session per stage</b><br/>writes the code and tests<br/>on its own branch"]
+        worker --> pr["<b>Pull request</b>"]
+        pr --> review["<b>Review round</b><br/>pr-adversary finds problems,<br/>verifier tries to refute each one"]
+        pr --> ci["<b>CI</b>"]
+        review -- "blocking findings" --> worker
+        ci -- "red" --> worker
+        comments["Reviewers' comments<br/>people and bots"] -.-> worker
+        review -- "clean" --> gate
+        ci -- "green" --> gate
+        gate{"<b>Merge gate</b><br/>facts read at the PR's head"}
+        gate -- "pass" --> merged["<b>Merged</b><br/>stage issue closed"]
+        merged --> accept["<b>Acceptance</b><br/>criteria checked,<br/>/qa runs it in a browser"]
+    end
+
+    gate -- "a hold, a sensitive file,<br/>or review budget spent" --> you
+    accept --> close["<b>Close-out</b><br/>report, parent issue closed,<br/>the next step written down"]
+    close --> you(["<b>You</b><br/>pick merges, answer what is left"])
+```
+
+1. **Plan.** `/plan` turns a request into a plan file: the goal, the stages (each one PR), the files each stage owns, and how to check it is done. It asks you about anything it cannot decide from the code.
+2. **File.** `/plan-issues` turns the plan into GitHub issues: one parent, one sub-issue per stage, ordered under a single Roadmap issue. A plan you signed off is labelled `ready`; one with open questions is labelled `needs-decision`, and `/decide` asks you them later.
+3. **Build.** `/feature` picks up a `ready` parent. A lead session starts one cloud session per stage. Each writes its stage on its own branch and opens a pull request. (`/pickup` is the same thing done by hand, one stage at a time.)
+4. **Review and merge.** Every new commit on a PR gets a review round from fresh agents: one finds problems, another tries to disprove each one, and only what survives goes back to the author. Comments from people and review bots are acted on too. A PR merges only when the review is clean, CI is green, and nobody has an open request or hold on it. A PR that touches CI, security or the agents' own files waits for you instead.
+5. **Accept and report.** Once every stage is in, the result is checked against the plan's acceptance criteria, including in a real browser with `/qa`. The run closes its issues, writes a report, and lists what still needs you.
+
 ## Using them
 
 Three ways, depending on where the session runs.
