@@ -240,6 +240,13 @@ Every model call re-reads your whole context, so waiting is what costs you, not 
   round by round: keep it accurate, and do not rewrite it unless a round says it is
   wrong. Do not reply to argue; if a finding is wrong, say so in one line on that
   thread and move on.
+- The lead may also forward a person's review comment. Make the change when it is
+  small and specific, push, and reply on that thread in one line naming the commit.
+  When it is not, reply in one line saying why. Never resolve a person's thread or
+  dismiss their review: that is theirs to do, and the merge waits for it.
+- Every comment and thread reply you write on GitHub opens with the line
+  <!-- feature:{stage-id} -->. You write as the owner's account; the marker is how
+  the lead tells your comments from the owner's.
 ```
 
 ## Concurrency

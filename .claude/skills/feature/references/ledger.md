@@ -68,7 +68,7 @@ Every wake that is not an echo (SKILL Phase 4.0), in this order:
 1. **Read the issue.** Do not act on anything you remember. If your context still holds the run, treat it as a cache to be validated, not a source.
 2. **Reconcile each row against reality.** The ledger is a claim; GitHub is the fact. A fresh `run-reconciler` agent does steps 1 and 2 and returns only the drift, so the PR and CI payloads below never reach the lead's context. These are the calls it makes:
    - branch: `list_branches`
-   - PR and its `mergeable` / `mergeable_state` / review state: `pull_request_read`
+   - PR and its `mergeable` / `mergeable_state` / review state, and feedback from people or bots since the last wake: `pull_request_read`
    - CI on the PR's **current head**: `actions_list` / `get_check_run`
    - worker liveness: `get_session` → `status_bucket`
    Write back every row that drifted, and log the drift. Rows drift constantly and that is normal — events get dropped, workers push between wakes.
@@ -86,6 +86,7 @@ Every action the lead takes is guarded by a check that it has not already happen
 | open the tracking issue | no open issue titled `Feature: <slug>` |
 | start a review round | PR not converged, no round already logged for that PR head SHA, and the head is not conflicted (CI state does not matter) |
 | send a review batch | round number not already logged for that PR head SHA |
+| forward a person's feedback | that comment or review id not already logged as forwarded or `skipped` |
 | merge | PR still open, and gate re-evaluated at the current head |
 | tell a worker to update from the default branch | the PR's turn to merge, one of the update rules in `merge-gate.md` holds, and no update already logged for that base SHA |
 | re-arm a wake | no pending trigger for this run (`list_triggers`) |
