@@ -9,40 +9,41 @@ An idea becomes merged code in five steps. You decide what to build and answer t
 
 ```mermaid
 flowchart TD
-    idea(["An idea"]) --> plan["<b>/plan</b><br/>researches the repo, settles<br/>the open decisions with you"]
-    plan --> planfile["<b>Plan file</b><br/>.claude/plans/slug.plan.md,<br/>opened as a PR"]
-    planfile --> issues["<b>/plan-issues</b><br/>a parent issue, one sub-issue per stage,<br/>queued under the Roadmap issue"]
+    idea(["An idea"]) --> plan["<b>/plan</b><br/>researches the repo,<br/>drafts the goal and its stages"]
+    plan --> issues["<b>/plan-issues</b><br/>one parent issue, one sub-issue<br/>per stage, under the Roadmap issue;<br/>opens a PR with the plan file"]
     issues --> signed{"Signed off?"}
-    signed -- "needs-decision" --> decide["<b>/decide</b><br/>you answer, one question at a time"]
+    signed -- "needs-decision<br/>or backlog" --> decide["<b>/decide</b><br/>you answer, one question at a time"]
     decide --> signed
     signed -- "ready" --> lead
 
-    subgraph run ["/feature #N or /feature --next"]
-        lead["<b>Lead session</b><br/>claims the parent issue,<br/>keeps a ledger in a tracking issue"]
+    subgraph run ["/feature --next or /feature #N"]
+        lead["<b>Lead session</b><br/>claims the parent issue,<br/>gives each stage its files,<br/>keeps a ledger"]
         lead --> worker["<b>One cloud session per stage</b><br/>writes the code and tests<br/>on its own branch"]
         worker --> pr["<b>Pull request</b>"]
         pr --> review["<b>Review round</b><br/>pr-adversary finds problems,<br/>verifier tries to refute each one"]
         pr --> ci["<b>CI</b>"]
         review -- "blocking findings" --> worker
         ci -- "red" --> worker
-        comments["Reviewers' comments<br/>people and bots"] -.-> worker
+        comments["People's change requests,<br/>bot findings that survive a verifier"] -.-> worker
         review -- "clean" --> gate
         ci -- "green" --> gate
         gate{"<b>Merge gate</b><br/>facts read at the PR's head"}
         gate -- "pass" --> merged["<b>Merged</b><br/>stage issue closed"]
-        merged --> accept["<b>Acceptance</b><br/>criteria checked,<br/>/qa runs it in a browser"]
+        gate -- "a hold, a sensitive file,<br/>or review rounds used up" --> escalated["<b>Escalated</b><br/>PR left open for you"]
+        merged --> accept
+        escalated --> accept
+        accept["<b>Acceptance</b>, once every stage is done<br/>criteria checked against the merged code,<br/>/qa in a browser where there is a UI"]
     end
 
-    gate -- "a hold, a sensitive file,<br/>or review budget spent" --> you
-    accept --> close["<b>Close-out</b><br/>report, parent issue closed,<br/>the next step written down"]
+    accept --> close["<b>Close-out</b><br/>report; parent closed if everything passed,<br/>follow-up issues for what did not"]
     close --> you(["<b>You</b><br/>pick merges, answer what is left"])
 ```
 
-1. **Plan.** `/plan` turns a request into a plan file: the goal, the stages (each one PR), the files each stage owns, and how to check it is done. It asks you about anything it cannot decide from the code.
-2. **File.** `/plan-issues` turns the plan into GitHub issues: one parent, one sub-issue per stage, ordered under a single Roadmap issue. A plan you signed off is labelled `ready`; one with open questions is labelled `needs-decision`, and `/decide` asks you them later.
-3. **Build.** `/feature` picks up a `ready` parent. A lead session starts one cloud session per stage. Each writes its stage on its own branch and opens a pull request. (`/pickup` is the same thing done by hand, one stage at a time.)
-4. **Review and merge.** Every new commit on a PR gets a review round from fresh agents: one finds problems, another tries to disprove each one, and only what survives goes back to the author. Comments from people and review bots are acted on too. A PR merges only when the review is clean, CI is green, and nobody has an open request or hold on it. A PR that touches CI, security or the agents' own files waits for you instead.
-5. **Accept and report.** Once every stage is in, the result is checked against the plan's acceptance criteria, including in a real browser with `/qa`. The run closes its issues, writes a report, and lists what still needs you.
+1. **Plan.** `/plan` researches the repo, then turns your request into a plan file: the goal, the stages (each one PR), and how each stage is checked. With `--explore` it narrows the request down with you before drafting.
+2. **File.** In a repo that tracks plans as issues, `/plan` finishes by asking you the plan's open decisions, then runs `/plan-issues`. That files one parent issue and one sub-issue per stage, queues the parent under the Roadmap issue, and opens a PR with the plan file for you to merge. The parent is labelled `ready` once you sign it off; a plan or stage with open questions is `needs-decision`, and one you have not signed off yet is backlog. `/decide` works through both later.
+3. **Build.** `/feature --next` picks up the next `ready` parent (`/feature #N` builds a chosen one, asking for sign-off first if it needs it). A lead session gives each stage the files it owns and the acceptance criteria to meet, then starts one cloud session per stage. Each writes its stage on its own branch and opens a pull request. (`/pickup` lets one session, or a person, work a single stage by hand instead.)
+4. **Review and merge.** A PR gets a review round when it opens and again after each push that answers blocking findings, up to three rounds. Fresh agents run each round: one finds problems, another tries to disprove each one, and only what survives goes back to the author. A person's change request goes back to the author too; a person's question or hold stops the merge and comes to you; a review bot's comment is checked by a verifier first. A PR merges only when the review is clean, CI is green, nobody has an open request or hold, it stayed inside its stage's files, the stages it depends on have merged, and GitHub says it can merge. A PR that touches CI, dependencies, security code or the agents' own files waits for you instead, as does one still failing after its last round.
+5. **Accept and report.** Once every stage has merged or escalated, the result is checked against the acceptance criteria: by reading the merged code, and by running it in a browser with `/qa` when there is something to drive. A clean run closes the parent issue. Anything unmet or escalated leaves it open, with a follow-up issue and a list of what needs you.
 
 ## Using them
 
