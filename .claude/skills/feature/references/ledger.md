@@ -30,6 +30,7 @@ Title `Feature: <slug>`, label `feature-run`, body:
 - skipped on PRs by design: `{job}` (`if: {condition}`) · … , or "none"
 - known environment failures: {suites that fail in a worker container regardless of the change, or "none"}
 - report: {publish | file}
+- sensitive extras: CODEOWNERS team globs `{glob}` · … · hook scripts `{path}` · … , or "none" (`merge-gate.md`, condition 7)
 - issue mode: parent #{N} · stages {stage-id} → #{n} · … (or "no" outside issue mode)
 - bounds: deadline {ISO timestamp} · no-branch 45m · no-commit 90m · re-runs 1 per check per head · check-ins 30→60→120m on no drift, capped at the shortest running silence timeout
 
@@ -53,7 +54,7 @@ Title `Feature: <slug>`, label `feature-run`, body:
 - 2026-09-15T11:15Z #41 converged after round 2, merged
 ```
 
-**Rounds**: `{rounds run}/{max-rounds}`, then `+1` once the extra round is granted, then the confirmed blocking count of each round in order. The counts are what the extra-round rule compares (`review-loop.md`, **Stop rules**), so they live here rather than in the lead's memory.
+**Rounds**: `{rounds run}/{max-rounds}`, then `+1` once the extra round is granted, then `+f{n}` for the feedback rounds a person started (they sit outside the budget, `review-loop.md` step 0), then the confirmed blocking count of each budgeted round in order. The extra-round rule compares budgeted rounds only. The counts are what the extra-round rule compares (`review-loop.md`, **Stop rules**), so they live here rather than in the lead's memory.
 
 **States**: `pending` → `running` → `review` → `fixing` → `converged` → `merged`, plus `escalated` and `aborted` as terminal states. A `converged` row goes back to `fixing` when a person's change request or a confirmed blocking bot finding is sent to its worker (`merge-gate.md`, **Feedback on the PR**).
 

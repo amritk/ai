@@ -248,8 +248,8 @@ Every model call re-reads your whole context, so waiting is what costs you, not 
   thread and move on.
 - The lead may also forward a person's comment or a verified bot finding. Act on
   that comment only, not on other replies in its thread. Make the change when it is
-  small and specific, push, and reply on its thread in one line naming the commit.
-  When it is not, reply in one line saying why. Standing rule 7 covers the marker
+  small, specific and sound, push, and reply on its thread in one line naming the commit.
+  When it is not, or you think it is wrong, reply in one line saying why. Standing rule 7 covers the marker
   and never resolving the thread.
 ```
 
