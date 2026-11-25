@@ -1,6 +1,6 @@
 ---
 name: pr-review
-description: Review a GitHub pull request in this repo by number, or the current branch before a PR exists, running a custom review prompt against the real diff and context. Use when asked to "review PR 123", "/pr-review 123", "look at PR 123 for <something>", when a PR number or URL is pasted with a review instruction attached, or to self-review a branch before opening a PR (`/pr-review --branch`). Posts findings as line-anchored comments on a COMMENT review; `--dry-run` and `--branch` report in chat instead.
+description: Review a GitHub pull request in this repo by number, or the current branch before a PR exists, running a custom review prompt against the real diff and context. Use when asked to "review PR 123", "/pr-review 123", "look at PR 123 for {something}", when a PR number or URL is pasted with a review instruction attached, or to self-review a branch before opening a PR (`/pr-review --branch`). Posts findings as line-anchored comments on a COMMENT review; `--dry-run` and `--branch` report in chat instead.
 argument-hint: "<pr-number|pr-url|--branch [base-ref]> [custom review prompt] [--dry-run] [--prompt <file>]"
 allowed-tools:
   - Read
