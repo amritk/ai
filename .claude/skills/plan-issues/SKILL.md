@@ -1,6 +1,6 @@
 ---
 name: plan-issues
-description: Turn plan files into GitHub issues — one parent issue per `.claude/plans/<slug>.plan.md`, one sub-issue per open stage, existing issues reused instead of duplicated, every parent hung under one ordered Roadmap issue — and record the issue numbers back into the plans. Use for "/plan-issues", "file these plans as issues", "sync the plans to GitHub", "make issues from the roadmap", after adding a stage to a plan, or to reopen a finished plan with new work. Idempotent; rerunning creates only what is missing.
+description: Turn plan files into GitHub issues — one parent issue per `.claude/plans/{slug}.plan.md`, one sub-issue per open stage, existing issues reused instead of duplicated, every parent hung under one ordered Roadmap issue — and record the issue numbers back into the plans. Use for "/plan-issues", "file these plans as issues", "sync the plans to GitHub", "make issues from the roadmap", after adding a stage to a plan, or to reopen a finished plan with new work. Idempotent; rerunning creates only what is missing.
 argument-hint: "[plan paths...] [--dry-run] [--no-root] [--no-match]"
 allowed-tools:
   - Read
