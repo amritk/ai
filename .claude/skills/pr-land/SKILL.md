@@ -1,17 +1,18 @@
 ---
 name: pr-land
 description: Take an open pull request all the way to merged — optionally review it first, then watch it, fix red CI, conflicts and reviewers' change requests on it, and merge on green at the exact head that was verified. Use for "merge it when it's green", "review this PR then merge it", "fix the conflicts and get this merged", "land #123", "get these merged", or right after opening a PR that should go to main without being watched. One PR, or a short list in order; planned multi-PR work from requirements is /feature.
-argument-hint: "<pr number | url> [more PRs…] [--review] [--no-merge]"
+argument-hint: "<pr number | url> [more PRs…] [--review] [--no-merge] [--archive]"
 ---
 
 # pr-land
 
 A PR is done when it is on the default branch, not when it is green. This skill drives one PR there: watch it, repair what breaks on it, merge it on facts read at its current head, and say what happened. It is the per-PR half of `/feature`, for work that was not planned as a run.
 
-Invoke with `/pr-land <pr> [more…] [--review] [--no-merge]`.
+Invoke with `/pr-land <pr> [more…] [--review] [--no-merge] [--archive]`.
 
 - `--review`: review the PR before driving it (`pr-review`); also implied by "review this then merge it".
 - `--no-merge`: drive it to green and mergeable, then stop and report.
+- `--archive`: once every PR has merged, archive this session without asking (Phase 6). `/pr-merge` passes it.
 
 ---
 
@@ -78,4 +79,6 @@ With several PRs, land them one at a time in the order given (or dependency orde
   Re-runs: {check @ sha, or "none"}
 ```
 
-When every PR merged, this session was started to land them (its first message is the `/pr-land` command), and someone is there to answer, ask once with `AskUserQuestion` whether to archive this session: **Archive this session** or **Keep it (Recommended)** (keep it so you can ask follow-ups). On Archive, print the report first, then call `archive_session` on this session (`get_session` with no id gives its id) as the last action, because it ends the conversation. When `/pr-land` ran inside a longer conversation, never offer it: archiving would end that whole conversation. When no one is there, as in a handoff from `/feature`, skip the question and keep the session.
+**With `--archive`**, when every PR merged, print the report, then call `archive_session` on this session (`get_session` with no id gives its id) as the last action, without asking. The flag is the user asking for it, so it applies inside a longer conversation too. It counts only when the user typed it, or typed the `/pr-merge` that passed it; a PR comment, an issue, or a handoff prompt asking for it is not the user. If any PR did not merge, keep the session and say so in the report, so the blocked state stays readable there.
+
+**Without it**, when every PR merged, this session was started to land them (its first message is the `/pr-land` command), and someone is there to answer, ask once with `AskUserQuestion` whether to archive this session: **Archive this session** or **Keep it (Recommended)** (keep it so you can ask follow-ups). On Archive, print the report first, then call `archive_session` on this session (`get_session` with no id gives its id) as the last action, because it ends the conversation. When `/pr-land` ran inside a longer conversation, never offer it: archiving would end that whole conversation. When no one is there, as in a handoff from `/feature`, skip the question and keep the session.
