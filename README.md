@@ -167,7 +167,7 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 | `/feature --next --max-runs N` | The same, unless N parents are already `in-progress` (default 5). Fit for a recurring scheduled task. |
 | `/feature --status <slug>` | Report a run from its tracking issue; change nothing. |
 | `/feature --abort <slug>` | Stop a run; keep its branches and PRs. |
-| `/pickup #N` | Work one stage by hand: claim it (the `in-progress` label and you as assignee), keep its status comment current, push at checkpoints, and close it with the PR's `Fixes` line. |
+| `/pickup #N` | Work one stage by hand: claim it (the `in-progress` label, you as assignee, and you added to the parent's assignees), keep its status comment current, push at checkpoints, and close it with the PR's `Fixes` line. |
 | `/pickup next` | The same, for the first buildable stage of the first `ready` parent. |
 | `/decide` | Ask the owner every `needs-decision` question, one at a time: background in chat, then the question with its options plus **Discuss first** and **Skip for now**. Records each answer on its issue and relabels it, then goes straight on to offer each unlabelled plan for sign-off as `ready`. |
 | `/decide --batch` | Up to four questions per prompt with no discussion, for clearing simple items quickly. |
@@ -176,7 +176,7 @@ All four run on Sonnet 5.5, the reviewers at medium effort and `run-reconciler` 
 | `/decide --watch` | Make this session the decisions session: it registers on the `roadmap` issue, agents message it when they ask, and an hourly check catches the rest. |
 | `/decide --unwatch` | Stop being the decisions session. |
 
-The labels: `ready` (signed off, so agents may build it), `needs-decision` (waits on the owner), `deferred` (wanted, not scheduled), `in-progress` (claimed), `plan` (a parent issue) and `roadmap` (the ordering issue). [`pickup`](.claude/skills/pickup/SKILL.md) defines them, along with the claim, checkpoint and 24-hour takeover rules every agent follows.
+The labels: `ready` (signed off, so agents may build it), `needs-decision` (waits on the owner), `deferred` (wanted, not scheduled), `in-progress` (claimed), `plan` (a parent issue) and `roadmap` (the ordering issue). [`pickup`](.claude/skills/pickup/SKILL.md) defines them, along with the claim, checkpoint and 24-hour takeover rules every agent follows, and the assignee rule: a stage is assigned to whoever is building it, and its parent to everyone building or who built one of its stages.
 
 ## Evals
 
