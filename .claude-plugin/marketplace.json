@@ -8,7 +8,7 @@
     {
       "name": "ai",
       "source": "./",
-      "description": "Workflow skills (feature, plan, plan-issues, pickup, decide, check, check-iterate, pr-land, pr-review, pr-triage, debug, perf, qa, session-report, async-daily), convention skills, and the checker, verifier, pr-adversary and run-reconciler agents."
+      "description": "Workflow skills (feature, plan, plan-issues, pickup, decide, check, check-iterate, pr-land, pr-merge, pr-review, pr-triage, debug, perf, qa, session-report, async-daily), convention skills, and the checker, verifier, pr-adversary and run-reconciler agents."
     }
   ]
 }
