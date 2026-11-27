@@ -2,8 +2,8 @@
 name: pr-adversary
 description: Read-only adversarial reviewer for one round of a /feature PR review. Reads a pull request's diff at a fixed head SHA through the GitHub API — no checkout needed — and returns evidence-backed findings without proposing fixes, replying to anyone, or negotiating. Spawn a fresh one per round; never continue a previous round's agent.
 tools: Read, Grep, Glob, mcp__github__pull_request_read, mcp__github__get_file_contents, mcp__github__get_check_run, mcp__github__actions_list, mcp__github__get_job_logs
-model: claude-sonnet-5-5
-effort: medium
+model: claude-opus-5-5
+effort: low
 color: red
 ---
 

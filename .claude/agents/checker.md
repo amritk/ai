@@ -2,8 +2,8 @@
 name: checker
 description: Read-only data collector for the /check task. Gathers structured, evidence-backed findings about the branch's diff against main (security, reliability, consistency) without proposing fixes or a final plan. Spawn one or more of these to fan out data collection across the changed files; the /check flow synthesizes their raw findings into an actionable plan.
 tools: Bash, Read, Grep, Glob
-model: claude-sonnet-5-5
-effort: medium
+model: claude-opus-5-5
+effort: low
 color: cyan
 ---
 
