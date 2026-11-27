@@ -6,7 +6,7 @@ argument-hint: "[pr number | url] [--no-review] [--keep]"
 
 # pr-merge
 
-The short way to say "open a PR, review it, fix its CI and conflicts, merge it, archive this session". This skill only gets the work into an open PR; everything after that is `/pr-land`, so the merge rules live in one place. A red check or a conflict with the default branch does not stop the run: `pr-land` fixes it on this session's branch and merges once the PR is green.
+The short way to say "open a PR, review it, fix its CI and conflicts, merge it, archive this session". This skill only gets the work into an open PR; everything after that is `/pr-land`, so the merge rules live in one place. A red check or a conflict with the default branch does not stop the run: `pr-land` fixes it on this session's branch, then merges once its merge gate passes. A check that is red on the default branch too, or a person's hold or open thread, still stops it.
 
 Invoke with `/pr-merge` on the branch that holds the work, or `/pr-merge <pr>` for a PR that is already open.
 
