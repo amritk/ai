@@ -1,12 +1,12 @@
 ---
 name: pr-merge
-description: Ship this session's work in one command — commit and push the branch, open a pull request for it (or reuse the open one), review it, drive it to merged with /pr-land, then archive this session. Use for "/pr-merge", "open a PR, review and merge, then archive", "ship it and close the session", "PR this and merge it", or whenever the work in this session is done and should go to main with no more typing.
+description: Ship this session's work in one command — commit and push the branch, open a pull request for it (or reuse the open one), review it, fix red CI and merge conflicts on it, drive it to merged with /pr-land, then archive this session. Use for "/pr-merge", "open a PR, review and merge, then archive", "ship it and close the session", "PR this and merge it", or whenever the work in this session is done and should go to main with no more typing.
 argument-hint: "[pr number | url] [--no-review] [--keep]"
 ---
 
 # pr-merge
 
-The short way to say "open a PR, review it, merge it, archive this session". This skill only gets the work into an open PR; everything after that is `/pr-land`, so the merge rules live in one place.
+The short way to say "open a PR, review it, fix its CI and conflicts, merge it, archive this session". This skill only gets the work into an open PR; everything after that is `/pr-land`, so the merge rules live in one place. A red check or a conflict with the default branch does not stop the run: `pr-land` fixes it on this session's branch, then merges once its merge gate passes. A check that is red on the default branch too, or a person's hold or open thread, still stops it.
 
 Invoke with `/pr-merge` on the branch that holds the work, or `/pr-merge <pr>` for a PR that is already open.
 
@@ -27,6 +27,6 @@ If nothing differs from the default branch, there is nothing to ship: say so and
 
 ## 2. Land it
 
-Invoke the `pr-land` skill with `<pr> --review --archive`, dropping `--review` for `--no-review` and `--archive` for `--keep`. Pass along what the user asked the review to look for, if anything. From here `pr-land` handles the review, CI, conflicts, feedback, the merge gate, the merge, and the archive. Do not duplicate any of it here.
+Invoke the `pr-land` skill with `<pr> --review --archive`, dropping `--review` for `--no-review` and `--archive` for `--keep`. Pass along what the user asked the review to look for, if anything. From here `pr-land` handles the review, fixing red CI and merge conflicts, feedback, the merge gate, the merge, and the archive. Do not duplicate any of it here.
 
 The user typing `/pr-merge` is the request to archive that `pr-land --archive` needs, so archive this session once the PR merges, even inside a longer conversation. If the PR does not merge, `pr-land` keeps the session and reports why.
