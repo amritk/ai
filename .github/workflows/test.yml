@@ -40,6 +40,6 @@ jobs:
     permissions:
       statuses: write
     steps:
-      - uses: amritk/workflows/actions/ci-gate@8648bd998171e75f4d1fd5710f114d42257e1c3a # amritk/workflows#6, unreleased
+      - uses: amritk/workflows/actions/ci-gate@ac64e0798cf86da4bcdec948b09335334e5eae3c # main, with amritk/workflows#6
         with:
           needs: ${{ toJSON(needs) }}
