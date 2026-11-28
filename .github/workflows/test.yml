@@ -29,3 +29,17 @@ jobs:
         run: python3 evals/run.py --self-test
       - name: Script tests
         run: python3 -m unittest discover -s tests -t . -v
+
+  # The one check to require: green only when every job above succeeded. A
+  # job added to this workflow joins `needs` below.
+  ci-gate:
+    name: ci-gate
+    if: always()
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write
+    steps:
+      - uses: amritk/workflows/actions/ci-gate@ac64e0798cf86da4bcdec948b09335334e5eae3c # main, with amritk/workflows#6
+        with:
+          needs: ${{ toJSON(needs) }}
